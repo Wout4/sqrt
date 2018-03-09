@@ -38,7 +38,9 @@ lemma void real_div_lemma2(real x, real y, real result);
     requires x == y * result;
     ensures real_div(x,y) == result;
 
-
+lemma void division_lemma(real numerator, real smallDenominator, real bigDenominator);
+    requires smallDenominator <= bigDenominator;
+    ensures real_div(numerator,smallDenominator) >= real_div(numerator,bigDenominator);
 
 lemma void rr_lemma(real rr); //lemma for ceiling_test2 (tester.c)
     requires true;
@@ -66,6 +68,22 @@ lemma void real_sqrt_lemma(real x, real sqrt);
 lemma void real_sqrt_lemma2(real x, real sqrt);
     requires real_sqrt(x) == sqrt;
     ensures sqrt * sqrt == x;
+    
+lemma void sqrt_congruence_lemma(real x, real y);
+    requires x <= y;
+    ensures real_sqrt(x) <= real_sqrt(y);
+    
+lemma void strict_sqrt_congruence_lemma(real x, real y);
+    requires x <= y;
+    ensures real_sqrt(x) <= real_sqrt(y);
+    
+lemma void average_approximation_lemma(real under, real over, real target); //niet gebruikt
+    requires under <= target &*& over >= target;
+    ensures real_abs(((under + over) / 2) - target) <= over - target &*& real_abs(((under + over) / 2) - target) <= target - under;
+    
+lemma void average_approximation_lemma2(real under, real over);
+    requires under <= over;
+    ensures (under + over) / 2 <= over &*& (under + over) / 2 >= under;
 
 fixpoint real real_vector_size(real x, real y){
     return real_sqrt(x * x + y * y);

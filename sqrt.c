@@ -25,17 +25,44 @@ double my_sqrt(double x)
     if (x == 0.0) return 0.0; // 0 ipv 0.0 geeft problemen (int >< real)
     double result = 1.0;
     double oldResult = result; // toegevoegd voor invariant
+    long double div = (long double) x / result; // toegevoegd voor invariant 
+    //@ real_of_int_lemma(2,2);
+    result = (oldResult + div) / 2; // 1 iteratie buiten de lus om al aan invariant te kunnen voldoen
+    //@ assert real_of_double(oldResult) == some(?orr);
+    //@ assert real_of_long_double(div) == some(?ordiv);
+    //@ real_div_lemma2(rx,orr,ordiv);
+    //@ real orr2 = orr * orr;
+    //@ real rr1 = (orr + ordiv)/2;
+    //@ real rr2 = rr1 * rr1;
+    /*@ if (orr * orr > rx) {
+    	    assert orr * orr > rx;
+    	    real orr2div = real_div(orr * orr, rx);
+    	    real_div_lemma(orr2, rx, orr2div);
+    	    assert real_div(orr2, rx) > 1;
+    	    assert real_div(rx, orr2) < 1;
+    	    assert ordiv * ordiv < rx;
+    	} else {
+    	    assert ordiv * ordiv > rx;
+    	}
+    @*/
+    //@ assert real_abs(rx - rr2) < real_abs(rx - orr2);
+    //@ assert real_abs(real_sqrt(rx) - rr) < real_abs(real_sqrt(rx) - orr);
+    
     for (;;)
         /*@ invariant real_of_double(result) == some(?rr) &*& 
-        0 < rr &*& real_of_double(oldResult) == some(?orr) &*& 
-        real_abs(real_sqrt(rx) - rr) <= real_abs(real_sqrt(rx) - orr);
+        0 < rr &*& 
+        real_of_double(oldResult) == some(orr) &*& 
+        real_abs(real_sqrt(rx) - rr) < real_abs(real_sqrt(rx) - orr) &*&
+        real_of_long_double(div) == some (ordiv) &*&
+        ordiv == real_div(rx,orr) &*&
+        rr == (orr + ordiv)/2;
         @*/ //toegevoegd: elke iteratie komt result dichter bij echte sqrt
         //@ decreases real_ceiling(real_abs(real_div(rr,real_sqrt(rx)) - 1)*100000); // *100000 ipv /0.00001, (/ verwacht double in de teller)
         
     {
         oldResult = result;
         //@ real_of_int_lemma(2,2);
-        long double div = (long double)x / result;
+        div = (long double)x / result;
         result = (result + div) / 2;
         //result = (result + (long double)x / result) / 2;
         
@@ -47,7 +74,9 @@ double my_sqrt(double x)
         // we avoid overflow in the first sense.
         //@ assert real_of_double(result) == some(?nrr);
         //@ assert real_abs(real_sqrt(rx) - rr) <= real_abs(real_sqrt(rx) - orr);
-        //@ assert rr == orr;
+        //@ assert ordiv == real_div(rx,orr);
+        //@ real_div_lemma2(rx,orr,real_div(rx,orr));
+        //@ assert rr == (orr + ordiv) / 2;
         //@ assert real_of_long_double(div) == some(?rdiv);
         //@ real_div_lemma2(rx,rr,rdiv);
         //@ assert rdiv == real_div(rx,rr);
