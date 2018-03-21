@@ -4,22 +4,27 @@
 //TODO: issue verifast github, deling verwacht double in teller.
 float vector_size(float x, float y)
     //@ requires real_of_float(x) == some(?rx) &*& real_of_float(y) == some(?ry);
-    //@ ensures real_of_float(result) == some(?rr) &*& rx == 0 && ry == 0 ? rr == 0 : 0 < rr &*& relative_error(real_vector_size(rx,ry),rr,0.00001) == true; //rr < 1.00001 * real_vector_size(rx, ry) ook > checken -> relative_error
+    //@ ensures real_of_float(result) == some(?rr) &*& rx == 0 && ry == 0 ? rr == 0 : 0 < rr &*& relative_error(real_vector_size(rx,ry),rr,0.00001) == true;
 {
     //@ strict_product_sign_lemma(rx,rx);
     //@ strict_product_sign_lemma(ry,ry);
-    //double temp = (double)x * x + (double)y * y; for Z3 bug
+    //double temp = (double)x * x + (double)y * y; //for Z3 bug
     double sqrt = my_sqrt((double)x * x + (double)y * y);
     return (float) sqrt;
     // assert real_of_double(sqrt) == some(?rsqrt);
     // assert real_of_double(temp) == some(?rtemp);
-    // assert relative_error(real_sqrt(rtemp),rsqrt,0.00001) == true;
+    // assert rtemp == rx * rx + ry * ry;
+    /* if (rtemp != 0) {
+        assert relative_error(real_sqrt(rtemp),rsqrt,0.00001) == true;
+        assert real_vector_size(rx,ry) == real_sqrt(rx * rx + ry * ry);
+        assert relative_error(real_vector_size(rx,ry),rsqrt,0.00001) == true;
+    } @*/
 }
 
 
 double my_sqrt(double x)
     //@ requires real_of_double(x) == some(?rx) &*& 0 <= rx;
-    //@ ensures real_of_double(result) == some(?rr) &*& rx == 0 ? rr == 0 : 0 < rr &*& relative_error(real_sqrt(rx),rr,0.00001) == true;//rr < 1.00001 * real_sqrt(rx);
+    //@ ensures real_of_double(result) == some(?rr) &*& rx == 0 ? rr == 0 : 0 < rr &*& relative_error(real_sqrt(rx),rr,0.00001) == true;
     //@ terminates;
 {
     if (x == 0.0) return 0.0; // 0 ipv 0.0 geeft problemen (int >< real)

@@ -11,9 +11,16 @@ double fabs(double x);
 
 
 /*@ 
+lemma void leq_transitivity_lemma(real a, real b, real c);
+    requires a <= b &*& b <= c;
+    ensures a <= c;
+
+lemma void equal(real x, real y);
+    requires true;
+    ensures x == y;
 
 lemma void congruentie_lemma(real x, real a, real y);
-    requires x * a == y * a;
+    requires x * a == y * a &*& a != 0;
     ensures x == y;
     
 lemma void substitution_lemma(real x, real a, real b, real z);
@@ -25,11 +32,7 @@ lemma void substitution_lemma2(real x, real a, real b, real y);
     ensures a == b;
     
 fixpoint real real_div(real x, real y);
-/*
-lemma real real_div(real x, real y);
-    requires true;
-    ensures x == result * y;
-*/
+
 lemma void real_div_lemma(real x, real y, real result);
     requires real_div(x,y) == result;
     ensures x == y * result;
@@ -41,10 +44,18 @@ lemma void real_div_lemma2(real x, real y, real result);
 lemma void division_lemma(real numerator, real smallDenominator, real bigDenominator);
     requires smallDenominator <= bigDenominator;
     ensures real_div(numerator,smallDenominator) >= real_div(numerator,bigDenominator);
-
-lemma void rr_lemma(real rr); //lemma for ceiling_test2 (tester.c)
-    requires true;
-    ensures rr <= 0 &*& rr > -1.0;
+    
+lemma void real_div_sub_lemma(real a, real x, real y);
+    requires y != 0;
+    ensures a - real_div(x,y) == real_div(a * y - x , y);
+    
+lemma void real_div_add_lemma(real a, real x, real y);
+    requires y != 0;
+    ensures a + real_div(x,y) == real_div(a * y + x,y);
+   
+lemma void real_div_pos_lemma(real x, real y);
+    requires (x >= 0 && y > 0) || (x <= 0 && y < 0);
+    ensures real_div(x,y) >= 0;
 
 lemma option<real> real_of_double_lemma(double x);
     requires true; //isreal(x);
@@ -70,12 +81,12 @@ lemma void real_sqrt_lemma2(real x, real sqrt);
     ensures sqrt * sqrt == x;
     
 lemma void sqrt_congruence_lemma(real x, real y);
-    requires x <= y;
+    requires x <= y &*& x>=0 &*& y>=0;
     ensures real_sqrt(x) <= real_sqrt(y);
     
 lemma void strict_sqrt_congruence_lemma(real x, real y);
-    requires x <= y;
-    ensures real_sqrt(x) <= real_sqrt(y);
+    requires x < y &*& x>=0 &*& y>=0;
+    ensures real_sqrt(x) < real_sqrt(y);
     
 lemma void average_approximation_lemma(real under, real over, real target); //niet gebruikt
     requires under <= target &*& over >= target;
