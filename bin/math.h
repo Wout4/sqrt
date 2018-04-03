@@ -11,33 +11,6 @@ double fabs(double x);
 
 
 /*@ 
-lemma void leq_trans_lemma(real a, real b, real c);
-    requires a <= b &*& b <= c;
-    ensures a <= c;
-
-lemma void equal(real x, real y);
-    requires true;
-    ensures x == y;
-
-lemma void dummy_lemma(real a, real b, real c);
-    requires true;
-    ensures a - b <= b - c;
-    
-lemma void dummy_lemma2(real x, real a);
-    requires true;
-    ensures x > 1 ? real_abs(a) == a : true;
-
-lemma void congruentie_lemma(real x, real a, real y);
-    requires x * a == y * a &*& a != 0;
-    ensures x == y;
-    
-lemma void substitution_lemma(real x, real a, real b, real z);
-    requires a == b &*& x == a * z;
-    ensures x == b * z;
-    
-lemma void substitution_lemma2(real x, real a, real b, real y);
-    requires x == a * y &*& x == b * y;
-    ensures a == b;
     
 fixpoint real real_div(real x, real y);
 
@@ -52,14 +25,6 @@ lemma void real_div_lemma2(real x, real y, real result);
 lemma void division_lemma(real numerator, real smallDenominator, real bigDenominator);
     requires smallDenominator <= bigDenominator &*& numerator >=0;
     ensures real_div(numerator,smallDenominator) >= real_div(numerator,bigDenominator);
-    
-lemma void division_lemma2(real num1, real num2, real denom);
-    requires num1 < num2 &*& denom > 0;
-    ensures real_div(num1,denom) < real_div(num2,denom);
-    
-lemma void equality_division_lemma(real a, real b, real c);
-    requires a == b &*& c != 0;
-    ensures real_div(a,c) == real_div(b,c);
     
 lemma void real_div_sum_lemma(real a, real b, real c);
     requires c != 0;
@@ -81,6 +46,10 @@ lemma void real_div_sub_lemma(real a, real x, real y);
     requires y != 0;
     ensures a - real_div(x,y) == real_div(a * y - x , y);
     
+lemma void real_div_sub_lemma2(real a, real x, real y);
+    requires y != 0;
+    ensures real_div(x,y) - a == real_div(x - a * y, y);
+    
 lemma void real_div_add_lemma(real a, real x, real y);
     requires y != 0;
     ensures a + real_div(x,y) == real_div(a * y + x,y);
@@ -89,20 +58,12 @@ lemma void real_div_pos_lemma(real x, real y);
     requires (x >= 0 && y > 0) || (x <= 0 && y < 0);
     ensures real_div(x,y) >= 0;
 
-lemma option<real> real_of_double_lemma(double x);
-    requires true; //isreal(x);
-    ensures result == some(?rx);
-
 lemma void real_of_int_lemma(int x, real rx);
     requires true;
     ensures real_of_int(x) == rx;
-    
-lemma void int_add_lemma(int x, int y, int result);
-    requires some(real_of_int(x)) == some(?rx) &*& some(real_of_int(y)) == some(?ry) &*& some(real_of_int(result)) == some(?rresult) &*& x + y == result;
-    ensures rresult == rx + ry;
+
 
 fixpoint real real_sqrt(real x);
-
 
 lemma void real_sqrt_lemma(real x, real sqrt);
     requires sqrt * sqrt == x;
@@ -120,19 +81,11 @@ lemma void strict_sqrt_congruence_lemma(real x, real y);
     requires x < y &*& x>=0 &*& y>=0;
     ensures real_sqrt(x) < real_sqrt(y);
     
-lemma void average_approximation_lemma2(real under, real over);
-    requires under <= over;
-    ensures (under + over) / 2 <= over &*& (under + over) / 2 >= under;
-
 fixpoint real real_vector_size(real x, real y){
     return real_sqrt(x * x + y * y);
 } 
 
 fixpoint int real_ceiling(real x);
-
-lemma void real_ceiling_lemma(real x, int ceil);
-    requires real_of_int(ceil) >= x &*& real_of_int(ceil) - x < 1;
-    ensures real_ceiling(x) == ceil;
     
 lemma void real_ceiling_gt_lemma(real a, real b);
     requires a - b >= 1;
@@ -141,6 +94,89 @@ lemma void real_ceiling_gt_lemma(real a, real b);
 lemma void real_ceiling_pos_lemma(real a);
     requires a >= 0;
     ensures real_ceiling(a) >= 0;
+    
+    
+lemma void lemma1(real orr2,real ordiv2,real rx,real sqrx)
+    requires orr2 >= sqrx &*& 
+    rx == orr2 * ordiv2 &*&
+    sqrx * sqrx == rx &*&
+    sqrx > 0;
+    ensures ordiv2 <= sqrx &*& 
+    real_div(rx,orr2) == ordiv2 &*&
+    (orr2 + ordiv2)/2 >= sqrx;
+    {
+    real_div_lemma2(rx,orr2,ordiv2);
+    real rr2 = (orr2 + ordiv2)/2;
+    real b1 = orr2 - sqrx;
+    assert ordiv2 == real_div(rx,sqrx + b1);
+    real_div_sub_lemma(sqrx, b1 * sqrx, b1 + sqrx);
+    assert ordiv2 == sqrx - real_div(b1 * sqrx, b1 + sqrx);
+    real_div_sub_lemma(b1, b1 * sqrx, b1 + sqrx);
+    product_sign_lemma(b1,b1);
+    real_div_pos_lemma(b1 * b1, sqrx + b1);
+    assert b1 - real_div(b1 * sqrx, b1 + sqrx) >= 0;
+    assert (rr2) >= sqrx;
+    product_sign_lemma(sqrx,b1);
+    assert sqrx * b1 >= 0;
+    real_div_pos_lemma(b1 * sqrx, b1 + sqrx);
+    assert real_div(b1 * sqrx, b1 + sqrx) >= 0;
+    assert ordiv2 <= sqrx;
+}
+
+lemma void lemma2(real orr1, real ordiv1, real rx, real sqrx)
+    requires orr1 < sqrx &*& 
+    rx == orr1 * ordiv1 &*&
+    sqrx * sqrx == rx &*&
+    orr1 > 0 &*&
+    ordiv1 == real_div(rx,orr1) &*&
+    sqrx > 0;
+    ensures ordiv1 >= sqrx &*& 
+    real_div(rx,orr1) == ordiv1 &*&
+    (orr1 + ordiv1)/2 >= sqrx;
+    {
+    real rr1 = (orr1 + ordiv1)/2;
+    assert sqrx > orr1;
+    real b = sqrx - orr1;
+    assert ordiv1 == real_div(rx,sqrx - b); 
+    real_div_add_lemma(sqrx, b * sqrx, sqrx - b);
+    assert ordiv1 == sqrx + real_div(b * sqrx, sqrx - b); 
+    real_div_sub_lemma2(b, b * sqrx, sqrx - b);
+    product_sign_lemma(b,b);
+    real_div_pos_lemma(b * b, sqrx - b);
+    assert real_div(b * sqrx,sqrx - b) - b >= 0; 
+    assert rr1 >= sqrx;
+    assert real_abs(sqrx - orr1) == sqrx - orr1;
+    assert rr1 <= ordiv1;
+    assert rr1 >= orr1;
+    }
+    
+lemma void lemma3(real rr, real nrr, real sqrx)
+    requires rr - nrr >= 0.000004*nrr &*&
+    sqrx > 0 &*&
+    nrr >= sqrx;
+    ensures real_ceiling(real_div(rr,sqrx)*1000000) > real_ceiling(real_div(nrr,sqrx)*1000000) &*&
+    real_ceiling(real_div(nrr,sqrx)*1000000) >= 0;
+    {
+    real c = rr - nrr;
+    assert c >= 0.000004*nrr;
+    real_div_sum_lemma(nrr,c,sqrx);
+    assert real_div(rr,sqrx) == real_div(nrr, sqrx) + real_div(c,sqrx);
+        
+    real_div_subs_lemma(0.000004*nrr,c,sqrx);
+    assert real_div(c,sqrx) >= real_div(0.000004*nrr,sqrx);
+    real_div_extraction_lemma(0.000004,nrr,sqrx);
+    assert real_div(c,sqrx) >= 0.000004*real_div(nrr,sqrx);
+    real_div_geq1(nrr,sqrx);
+    assert real_div(nrr,sqrx) >= 1;
+    assert real_div(c,sqrx) >= 0.000004;
+       
+    real_ceiling_gt_lemma(real_div(rr,sqrx)*1000000,real_div(nrr,sqrx)*1000000);
+    assert real_ceiling(real_div(rr,sqrx)*1000000) > real_ceiling(real_div(nrr,sqrx)*1000000);
+        
+    real_ceiling_pos_lemma(real_div(nrr,sqrx)*1000000);
+    assert real_ceiling(real_div(nrr,sqrx)*1000000) >= 0;
+    }
+    
 @*/
 
 
