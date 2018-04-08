@@ -121,17 +121,20 @@ double loop_test(double x)
         return result;
     }
     
-
-double substitution_test(double x)
-    //@ requires real_of_double(x) == some(?rx);
-    //@ ensures true;
+*/
+double substitution_test(double x, double y)
+    /*@ requires real_of_double(x) == some(?rx) &*&
+    	real_of_double(x) == some(?rx);
+    	ensures true;
+    @*/
     {
-    	//@ real a;
-    	//@ real b;
-    	//@ real c;
-    	//@ dummy_lemma(a,b,c);
-    	//@ dummy_lemma2(rx, b - c);
-    	
+	//@ strict_product_sign_lemma(rx,rx);
+    	//@ strict_product_sign_lemma(ry,ry);
+
+    	double x2 = (double)x * x;
+    	double y2 = (double)y * y;
+    	double sum = x2 + y2;
+
     	/*@
 	if (rx > 1) {
 	    assert real_abs(b - c) == b - c;
@@ -140,9 +143,11 @@ double substitution_test(double x)
 	} else {}
 
     	@*/
-/*    	return x + 1;
+    	return x + 1;
     }
-*/
+
+
+/*
 double my_sqrt(double x)
     //@ requires real_of_double(x) == some(?rx) &*& 0 <= rx;
     //@ ensures real_of_double(result) == some(?rr) &*& rx == 0 ? rr == 0 : 0 < rr &*& relative_error(real_sqrt(rx),rr,0.00001) == true;
@@ -170,7 +175,7 @@ double my_sqrt(double x)
     	    strict_sqrt_congruence_lemma(orr1 * orr1, rx);
 	    lemma2(orr1,ordiv1,rx,sqrx);
     	}
-    @*/
+    @*/ /*
     oldResult = result;
     div = (long double) x / result;
     result = (oldResult + div) / 2;
@@ -187,7 +192,7 @@ double my_sqrt(double x)
         rr >= real_sqrt(rx) &*&
         rr - real_sqrt(rx) <= real_abs(real_sqrt(rx) - orr) &*&
         rr == (orr + ordiv)/2;
-        @*/
+        @*/ /*
         //@ decreases real_ceiling(real_div(rr,sqrx)*1000000);
     {
         oldResult = result;
@@ -205,6 +210,6 @@ double my_sqrt(double x)
     return result;
 }
 
-    
+    */
     
     

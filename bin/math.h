@@ -12,6 +12,22 @@ double fabs(double x);
 
 /*@ 
     
+lemma void leq_substitution_lemma(real x, real y, real z);
+    requires x <= y &*& y == z;
+    ensures x <= z;
+    
+lemma void geq_substitution_lemma(real x, real y , real z);
+    requires x >= y &*& y == z;
+    ensures x >= z;
+
+lemma void substitution_lemma(real x, real y, real z, real w);
+    requires x == y + z &*& y == w;
+    ensures x == w + z;   
+    
+lemma void product_substitution_lemma(real a, real b, real c);
+    requires b <= c &*& a >= 0;
+    ensures a * b <= a * c;
+    
 fixpoint real real_div(real x, real y);
 
 lemma void real_div_lemma(real x, real y, real result);
@@ -80,6 +96,26 @@ lemma void sqrt_congruence_lemma(real x, real y);
 lemma void strict_sqrt_congruence_lemma(real x, real y);
     requires x < y &*& x>=0 &*& y>=0;
     ensures real_sqrt(x) < real_sqrt(y);
+    
+lemma void sqrt_extraction_lemma(real x, real y);
+    requires x >= 0 &*& y >= 0;
+    ensures real_sqrt(x*y) == real_sqrt(x) * real_sqrt(y);
+    
+lemma void sqrt_zero_lemma(real x);
+    requires x == 0;
+    ensures real_sqrt(x) == 0;
+    
+lemma void sqrt_pos_lemma(real x);
+    requires x > 0;
+    ensures real_sqrt(x) > 0;
+    
+lemma void sqrt_leq_one_lemma(real x);
+    requires x <= 1 &*& x >= 0;
+    ensures real_sqrt(x) <= 1;
+    
+lemma void sqrt_geq_one_lemma(real x);
+    requires x >= 1;
+    ensures real_sqrt(x) >= 1;
     
 fixpoint real real_vector_size(real x, real y){
     return real_sqrt(x * x + y * y);
