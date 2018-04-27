@@ -122,28 +122,63 @@ double loop_test(double x)
     }
     
 */
-double substitution_test(double x, double y)
-    /*@ requires real_of_double(x) == some(?rx) &*&
-    	real_of_double(x) == some(?rx);
-    	ensures true;
-    @*/
+double division_test(double x, double y)
+    //@ requires real_of_double(x) == some(?rx) &*& rx > 0;
+    //@ ensures true;
     {
-	//@ strict_product_sign_lemma(rx,rx);
-    	//@ strict_product_sign_lemma(ry,ry);
+    //@ real_of_int_lemma(1,1);
+    //@ real_of_int_lemma(2,2);
+    double result = 1;  
+    double oldResult = result;
+    long double div = (long double) x / result;
 
-    	double x2 = (double)x * x;
-    	double y2 = (double)y * y;
-    	double sum = x2 + y2;
+    long double sum = oldResult + div;
+    long double longResult = (sum) / 2;
+    result = (double) longResult;
+    //@ assert real_of_double(oldResult) == some(?orr1);
+    //@ assert real_of_long_double(div) == some(?ordiv1);
+    //@ assert real_of_double(result) == some(?nrr1);
+    //@ assert real_of_long_double(sum) == some(?rsum);
+    //@ assert real_of_long_double(longResult) == some(?rlr);
+    //@ real nrre1 = (orr1 + real_div(rx,orr1)) / 2;
+    //@ assert relative_error(real_div(rx,orr1), ordiv1, long_double_eps) == true;
+    //@ assert relative_error(orr1 + ordiv1, rsum, long_double_eps) == true;
+    //@ real_div_lemma2(orr1 + ordiv1,2, (orr1 + ordiv1)/2);
+    //@ assert (orr1 + ordiv1)/2 == real_div(orr1 + ordiv1,2);
+    //@ assert relative_error(real_div(rsum,2), rlr, long_double_eps) == true;
+    //@ assert relative_error(rlr,nrr1, double_eps) == true;
+    
+    //@ assert relative_error(real_div(rsum,2), nrr1, (1 + double_eps) * (1 + long_double_eps) - 1) == true;
+    //@ real_div_lemma2(rsum,2,rsum/2);
+    //@ real_div_pos_lemma(rx,orr1);
+    //@ assert real_div(rx,orr1) >= 0;
+    //@ assert ordiv1 >= 0;
+    //@ assert rsum >= 0;
+    //@ assert real_div(rsum,2) >= 0;
+    
+    //@ assert nrr1 <= real_div(rsum,2) * (1 + long_double_eps) * (1 + double_eps);
+    //@ assert rsum <= (orr1 + ordiv1)*(1 + long_double_eps);
+    //@ assert rsum / 2 <= (orr1 + ordiv1)*(1 + long_double_eps) / 2;
+    //@ real_div_lemma2((orr1 + ordiv1)*(1 + long_double_eps),2,(orr1 + ordiv1)*(1 + long_double_eps)/2);    
+    //@ assert real_div(rsum,2) <= real_div((orr1 + ordiv1)*(1 + long_double_eps),2);
+    //@ assert nrr1 <= real_div(orr1 + ordiv1,2) * (1 + long_double_eps) * (1 + long_double_eps) * (1 + double_eps);
+    //@ real_div_lemma2(orr1 + real_div(rx,orr1)*(1 + long_double_eps),2,(orr1 + real_div(rx,orr1)*(1 + long_double_eps))/2);
+    //@ assert nrr1 <= real_div(orr1 + real_div(rx,orr1)*(1 + long_double_eps),2) * (1 + long_double_eps) * (1 + long_double_eps) * (1 + double_eps);
+    //@ real_div_lemma2(orr1*(1 + long_double_eps) + real_div(rx,orr1)*(1 + long_double_eps),2,(orr1*(1 + long_double_eps) + real_div(rx,orr1)*(1 + long_double_eps))/2);    
+    //@ assert nrr1 <= real_div(orr1*(1 + long_double_eps) + real_div(rx,orr1)*(1 + long_double_eps),2) * (1 + long_double_eps) * (1 + long_double_eps) * (1 + double_eps);
+    //@ real_div_extraction_lemma((1 + long_double_eps), orr1 + real_div(rx,orr1),2);
+    //@ assert nrr1 <= real_div(orr1 + real_div(rx,orr1),2) *(1 + long_double_eps) * (1 + long_double_eps) * (1 + long_double_eps) * (1 + double_eps);
+    //@ assert nrr1 <= nrre1 *(1 + long_double_eps) * (1 + long_double_eps) * (1 + long_double_eps) * (1 + double_eps);
+    
+    
 
-    	/*@
-	if (rx > 1) {
-	    assert real_abs(b - c) == b - c;
-	    assert a - b <= b - c;
-	    assert a - b <= real_abs(b - c);
-	} else {}
-
-    	@*/
-    	return x + 1;
+    
+    //@ assert relative_error(real_div(orr1 + ordiv1,2),nrr1,(1 + double_eps) * (1 + long_double_eps) * (1 + long_double_eps) * (1 + long_double_eps) - 1) == true;
+    
+   
+    //@ assert relative_error(nrre1,nrr1,1) == true;
+    
+    return x;
     }
 
 
@@ -211,5 +246,40 @@ double my_sqrt(double x)
 }
 
     */
+double my_sqrt(double x)
+    //@ requires real_of_double(x) == some(?rx) &*& 0 <= rx;
+    //@ ensures true;
+    //@ terminates;
+{
+    if (x == 0.0) return 0.0;
+    //@ real_of_int_lemma(1,1);
+    //@ real_of_int_lemma(2,2);
+    double result = 1;  
+    //@ assert real_of_double(result) == some(?nrr1);
+    double a = result * result;
+    double ct1 = 1.00001;
+    double ct2 = 0.99999;
+    double u = ct1 * x;
+    double l = ct2 * x;
+    if (a <= u && a >= l) {
+        return result;
+        //@ assert real_of_double(a) == some(?ra);
+        //@ assert real_of_double(u) == some(?ru);
+        //@ assert real_of_double(l) == some(?rl);
+        //@ assert real_of_double(ct1) == some(?rct1);
+        //@ assert real_of_double(ct2) == some(?rct2);
+        //@ assert ra >= rl;
+        //@ assert ra <= ru;
+        //@ assert relative_error(rx * rct2, rl , d_eps) == true;
+        //@ product_sign_lemma(rx,rct2);
+        //@ assert rl >= rx * rct2 * (1 - d_eps);
+        //@ assert rct2 >= 0.99999*(1-d_eps);
+        //@ assert rx * (1 - d_eps) > 0;
+        //@ leq_preservation_lemma(0.99999 * (1-d_eps), rct2, rx * (1 - d_eps));
+        //@ assert rct2 * rx * (1-d_eps) >= 0.99999*(1-d_eps) * rx * (1 - d_eps);
+        //@ assert rl >= rx * 0.99999 * (1 - d_eps) * (1 - d_eps);
+    }
+    return 0;
+}
     
     

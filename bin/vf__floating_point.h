@@ -4,6 +4,11 @@
 #define float_eps 1.192093e-7
 #define double_eps 2.220446e-16
 #define long_double_eps 1.084202e-19
+#define f_eps 1.192093e-7
+#define d_eps 2.220446e-16
+#define ld_eps 1.084202e-19
+
+
 //#include "math.h"
 // VeriFast interprets floating-point operations as calls of the functions declared below.
 
@@ -13,7 +18,7 @@
 
 
 /*@
-
+fixpoint real real_div(real x, real y);
 fixpoint real real_abs(real x) {return x < 0 ? -x : x; }
 
 lemma void product_sign_lemma(real x, real y);
@@ -55,7 +60,7 @@ float vf__float_of_real(real x);
 
 double vf__double_of_real(real x);
     //@ requires true;
-    //@ ensures real_of_double(result) == some(?rx) &*& rx == x;//rx <= real_abs(double_eps * x) + x &*& rx >= x - real_abs(double_eps * x);
+    //@ ensures real_of_double(result) == some(?rx) &*& relative_error(x,rx,double_eps) == true;
     //@ terminates;
 
 long double vf__long_double_of_real(real x);
@@ -105,7 +110,7 @@ long double vf__long_double_of_float(float x);
 
 float vf__float_of_double(double x);
     //@ requires real_of_double(x) == some(?rx);
-    //@ ensures real_of_float(result) == some (?rr) &*& rx == rr;
+    //@ ensures real_of_float(result) == some (?rr) &*& relative_error(rx,rr,float_eps) == true;
     //@ terminates;
 
 long double vf__long_double_of_double(double x);
@@ -119,8 +124,10 @@ float vf__float_of_long_double(long double x);
     //@ terminates;
 
 double vf__double_of_long_double(long double x);
-    //@ requires real_of_long_double(x) == some(?rx); // rx<max_long_double
-    //@ ensures real_of_double(result) == some(?rresult) &*& rresult == rx;
+    //@ requires real_of_long_double(x) == some(?rx);
+    /*@ ensures real_of_double(result) == some(?rr) &*& 
+    relative_error(rx, rr, double_eps) == true;
+    @*/
     //@ terminates;
 
 bool vf__float_eq(float x, float y);
@@ -174,8 +181,8 @@ bool vf__float_le(float x, float y);
     //@ terminates;
 
 bool vf__double_le(double x, double y);
-    //@ requires true;
-    //@ ensures true;
+    //@ requires real_of_double(x) == some(?rx) &*& real_of_double(y) == some(?ry);
+    //@ ensures result == (rx <= ry);
     //@ terminates;
 
 bool vf__long_double_le(long double x, long double y);
@@ -205,7 +212,7 @@ bool vf__float_ge(float x, float y);
 
 bool vf__double_ge(double x, double y);
     //@ requires real_of_double(x) == some(?rx) &*& real_of_double(y) == some(?ry);
-    //@ ensures result == (rx == ry);
+    //@ ensures result == (rx >= ry);
     //@ terminates;
 
 bool vf__long_double_ge(long double x, long double y);
@@ -223,14 +230,15 @@ double vf__double_add(double x, double y);
     /*@ ensures real_of_double(result) == some(?rr) &*& 
     	relative_error(rx + ry, rr, double_eps) == true &*& 
     	rx == 0 ? rr == ry : true &*& 
-    	ry == 0 ? rr == rx : true &*&
-    	rx > 0 && ry > 0 ? rr > 0 : true;
+    	ry == 0 ? rr == rx : true;
     @*/
     //@ terminates;
 
 long double vf__long_double_add(long double x, long double y);
     //@ requires real_of_long_double(x) == some(?rx) &*& real_of_long_double(y) == some(?ry);
-    //@ ensures real_of_long_double(result) == some(?rresult) &*& rresult == rx + ry;
+    /*@ ensures real_of_long_double(result) == some(?rr) &*& 
+    relative_error(rx + ry, rr, long_double_eps) == true;
+    @*/
     //@ terminates;
 
 float vf__float_sub(float x, float y);
@@ -240,7 +248,7 @@ float vf__float_sub(float x, float y);
 
 double vf__double_sub(double x, double y);
     //@ requires real_of_double(x) == some(?rx) &*& real_of_double(y) == some(?ry);
-    //@ ensures real_of_double(result) == some(?rr) &*& rr == rx - ry;
+    //@ ensures real_of_double(result) == some(?rr) &*& relative_error(rx - ry, rr, double_eps) == true;
     //@ terminates;
 
 long double vf__long_double_sub(long double x, long double y);
@@ -255,7 +263,7 @@ float vf__float_mul(float x, float y);
 
 double vf__double_mul(double x, double y);
     //@ requires real_of_double(x) == some(?rx) &*& real_of_double(y) == some(?ry);
-    //@ ensures real_of_double(result) == some(?rr) &*& rr == rx * ry;
+    //@ ensures real_of_double(result) == some(?rr) &*& relative_error(rx * ry, rr, double_eps) == true;
     //@ terminates;
 
 long double vf__long_double_mul(long double x, long double y);
@@ -275,7 +283,7 @@ double vf__double_div(double x, double y);
 
 long double vf__long_double_div(long double x, long double y);
     //@ requires real_of_long_double(x) == some(?rx) &*& real_of_long_double(y) == some(?ry);
-    //@ ensures real_of_long_double(result) == some(?rresult) &*& rresult * ry == rx;
+    //@ ensures real_of_long_double(result) == some(?rr) &*& relative_error(real_div(rx,ry), rr, long_double_eps) == true;
     //@ terminates;
 
 #endif
