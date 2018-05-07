@@ -102,25 +102,25 @@ double next(double r, double x)
     //@ assert ordiv1 + orr1 > (ordiv1 + orr1) * d_eps;
     //@ assert ordiv1 + orr1 - (ordiv1 + orr1) * d_eps > 0;
     /*@ if (rsum == ordiv1 + orr1 - (ordiv1 + orr1) * d_eps){
-    	    rsum > 0;
+    	    
     } else {
-    	    rsum > 0;
+
     }
     
     @*/ 
     //@ assert rsum > 0;
     /*@ if (rlr == rsum - rsum * d_eps){
-    	    rlr > 0;
+
     } else {
-    	    rlr > 0;
+
     }
     
     @*/ 
     //@ assert rlr > 0;
     /*@ if (nrr1 == rlr - rlr * d_eps){
-    	    nrr1 > 0;
+
     } else {
-    	    nrr1 > 0;
+
     }
     
     @*/ 
@@ -130,6 +130,7 @@ double next(double r, double x)
 bool test(double r, double x)
     /*@ requires real_of_double(r) == some(?rr) &*& 
     real_of_double(x) == some(?rx) &*&
+    rr > 0 &*&
     rx > 0;
     @*/
     //@ ensures result == true ? relative_error(real_sqrt(rx), rr, 0.00001) == true : rr > real_sqrt(rx) * 1.000001 || rr < real_sqrt(rx) * 0.999999;
@@ -154,6 +155,8 @@ bool test(double r, double x)
     return false;
 }
 
+
+
 double my_sqrt(double x)
     //@ requires real_of_double(x) == some(?rx) &*& 0 <= rx;
     //@ ensures real_of_double(result) == some(?rr) &*& rx == 0 ? rr == 0 : 0 < rr &*& relative_error(real_sqrt(rx),rr,0.00001) == true;
@@ -172,23 +175,17 @@ double my_sqrt(double x)
     result = next(oldResult,x);
     //@ assert real_of_double(oldResult) == some(?orr1);
     //@ assert real_of_double(result) == some(?nrr1);
-    //@ real nrre = (orr1 + real_div(rx,orr1)) / 2;
-
     //@ real eps = (1 + ld_eps) * (1 + ld_eps) * (1 + ld_eps) * (1 + d_eps) - 1;
-    //@ assert relative_error(nrre,nrr1,eps) == true;
     //@ real_sqrt_lemma(orr1 * orr1,orr1);   	    
     //@ real sqrx = real_sqrt(rx);
     //@ real_sqrt_lemma2(rx,sqrx);
     //@ real_div_lemma2(rx,sqrx,sqrx);
-    // sqrt_pos_lemma(rx);
     /*@ if (orr1 * orr1 >= rx) {
     	    sqrt_congruence_lemma(rx, orr1 * orr1);
     	    division_lemma(rx,sqrx,orr1);
     	    real_div_lemma(rx,orr1,real_div(rx,orr1));
      	    overestimation_lemma1(orr1,sqrx,rx, real_div(rx,orr1), eps);
     	    assert nrr1 >= sqrx;
-    	    
-    	    //lemma1(orr1,real_div(rx,orr1),rx,sqrx);
     	} else {
     	    sqrt_congruence_lemma(orr1 * orr1, rx);
     	    assert orr1 <= 0.999999 * sqrx;
@@ -199,7 +196,6 @@ double my_sqrt(double x)
     if (test(result,x)) {
         return result;
     }
-    //@ assert nrr1 > real_sqrt(rx) * 1.000001 || nrr1 < real_sqrt(rx) * 0.999999;
     
     oldResult = result;
     result = next(oldResult,x);
@@ -227,19 +223,9 @@ double my_sqrt(double x)
     	result = next(oldResult,x);
     	//@ assert real_of_double(oldResult) == some(?orr3);
     	//@ assert real_of_double(result) == some(?nrr3);
-    	//@ real nrre3 = (orr3 + real_div(rx,orr3)) / 2;
     	//@ real_div_lemma(rx, orr3, real_div(rx,orr3));
     	//@ overestimation_lemma1(orr3, sqrx, rx, real_div(rx,orr3), 1e-13);
-    	//@ assert (1 + 1e-13) * nrre3 <= orr3;
-    	//@ assert nrr3 <= nrre3 * (1 + eps);
-    	//@ assert 1 + eps == 1.0000000000000002223698606000000000722576246420641200078316371693762426026909898298740852833041968;
-    	//@ assert nrre3 >= nrr3 / 1.0000000000000002223698606000000000722576246420641200078316371693762426026909898298740852833041968;
-    	//@ assert (1 + 1e-13) / 1.0000000000000002223698606000000000722576246420641200078316371693762426026909898298740852833041968 * nrr3 <= orr3;
-    	//@ assert (1 + 1e-13) / 1.0000000000000002223698606000000000722576246420641200078316371693762426026909898298740852833041968 > 1 + 1e-14;
-    	// leq_preservation_lemma(1 + 1e-14,(1 + 1e-13) / 1.0000000000000002223698606000000000722576246420641200078316371693762426026909898298740852833041968, nrr3);
-	//@ assert (1 + 1e-14) * nrr3 <= (1 + 1e-13) / 1.0000000000000002223698606000000000722576246420641200078316371693762426026909898298740852833041968 * nrr3;
-    	//@ assert (1 + 1e-14) * nrr3 <= orr3;
-    	//@ assert orr3 - nrr3 >= 1e-14 * nrr3;
+
         //@ lemma3(orr3,nrr3,sqrx);
     }
     return result;

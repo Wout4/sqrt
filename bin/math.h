@@ -8,10 +8,12 @@ double fabs(double x);
     //@ requires real_of_double(x) == some(?rx);
     //@ ensures real_of_double(result) == some(?rresult) &*& rresult >=0 &*& rresult == rx || rresult == -rx;
     //@ terminates;
+    
+double nextafter(double x, double y);
 
 
 /*@ 
-    
+
 lemma void leq_substitution_lemma(real x, real y, real z);
     requires x <= y &*& y == z;
     ensures x <= z;
@@ -159,6 +161,26 @@ lemma void real_ceiling_pos_lemma(real a);
     requires a >= 0;
     ensures real_ceiling(a) >= 0;
     
+lemma void transitivity_bug(real ra, real ru, real rl, real rct2, real nrr, real rx)
+    requires ra <= ru &*&
+    ra >= rl &*&
+    rx > 0 &*&
+    //relative_error(nrr * nrr, ra, double_eps) == true &*&
+    relative_error(0.99999, rct2, d_eps) == true &*&
+    relative_error(rx * rct2, rl , d_eps) == true;
+    ensures rl >= rx * 0.99999 * (1 - d_eps) * (1 - d_eps);
+{
+        
+    product_sign_lemma(rx,rct2);
+    assert rl >= rx * rct2 * (1 - d_eps);
+    assert rct2 >= 0.99999*(1-d_eps);
+    assert rx * (1 - d_eps) > 0;
+    leq_preservation_lemma(0.99999 * (1-d_eps), rct2, rx * (1 - d_eps));
+    assert rct2 * rx * (1-d_eps) >= 0.99999*(1-d_eps) * rx * (1 - d_eps);
+    //leq_transitivity_lemma(rx * 0.99999 * (1 - d_eps) * (1 - d_eps),rx * rct2 * (1 - d_eps),rl);
+    assert rl >= rx * 0.99999 * (1 - d_eps) * (1 - d_eps);
+        
+}
 
 
 lemma void overestimation_lemma1(real orr, real sqrx, real rx, real ordiv, real eps)
@@ -189,7 +211,6 @@ lemma void overestimation_lemma1(real orr, real sqrx, real rx, real ordiv, real 
 
 
     assert sqrx <= 1000000 * b;
-    assert sqrx + b <= 1000001 * b;
     division_lemma(b,sqrx + b, 1000001 * b);
     assert real_div(b,sqrx + b ) >= real_div(b,1000001 * b);
     real_div_elimination_lemma(b, 1, 1000001);
@@ -278,10 +299,9 @@ lemma void overestimation_lemma2(real orr, real sqrx, real rx, real ordiv, real 
     rx == orr * ordiv &*&
     sqrx * sqrx == rx &*&
     eps > 0 &*&
-    eps < 4.9e-13 &*&
+    eps < 5e-13 &*&
     sqrx > 0;
-    ensures (1 + eps) * (orr + ordiv) / 2 <= orr &*&
-    (1 - eps) * (orr + ordiv) / 2 >=  sqrx;
+    ensures (1 - eps) * (orr + ordiv) / 2 >=  sqrx;
 
     
 lemma void lemma3(real rr, real nrr, real sqrx)
@@ -342,7 +362,7 @@ lemma void error_lemma(real orr, real ordiv, real rx, real nrr, real rsum, real 
     assert relative_error((orr + real_div(rx,orr)) / 2 , nrr, ((1 + ld_eps) * (1 + ld_eps) * (1 + ld_eps) * (1 + d_eps) - 1)) == true;
     }
     
-lemma void stop_condition_lemma(real ra, real ru, real rl, real rct1, real rct2, real nrr, real rx);
+lemma void stop_condition_lemma(real ra, real ru, real rl, real rct1, real rct2, real nrr, real rx)
     requires ra <= ru &*&
     ra >= rl &*&
     rx > 0 &*&
@@ -352,61 +372,62 @@ lemma void stop_condition_lemma(real ra, real ru, real rl, real rct1, real rct2,
     relative_error(rx * rct2, rl , d_eps) == true &*&
     relative_error(rx * rct1, ru , d_eps) == true;
     ensures relative_error(real_sqrt(rx), nrr, 0.00001) == true;
-/*{
+{
         
-        product_sign_lemma(rx,rct2);
-        assert rl >= rx * rct2 * (1 - d_eps);
-        assert rct2 >= 0.99999*(1-d_eps);
-        assert rx * (1 - d_eps) > 0;
-        leq_preservation_lemma(0.99999 * (1-d_eps), rct2, rx * (1 - d_eps));
-        assert rct2 * rx * (1-d_eps) >= 0.99999*(1-d_eps) * rx * (1 - d_eps);
-        leq_transitivity_lemma(rx * 0.99999 * (1 - d_eps) * (1 - d_eps),rx * rct2 * (1 - d_eps),rl);
-        assert rl >= rx * 0.99999 * (1 - d_eps) * (1 - d_eps);
-        product_sign_lemma(rx,rct1);
-        assert ru <= rx * rct1 * (1 + d_eps);
-        assert rct1 <= 1.00001 * (1 + d_eps);
-        leq_preservation_lemma(rct1, 1.00001 * (1 + d_eps),rx * (1 + d_eps));
-	assert ru <= rx * 1.00001 * (1 + d_eps) * (1 + d_eps);
-        
-	assert ra <= nrr * nrr * (1 + double_eps);
-	assert ra >= nrr * nrr * (1 - double_eps);
-	assert ra / 1.0000000000000002220446 <= nrr * nrr; // 1 + double_eps
-	assert ra / 0.9999999999999997779554 >= nrr * nrr; // 1 - double_eps;
-	sqrt_congruence_lemma(ra / 1.0000000000000002220446, nrr * nrr);
-	sqrt_congruence_lemma(nrr * nrr, ra / 0.9999999999999997779554);
-	real_sqrt_lemma(nrr*nrr,nrr);
-	assert nrr >= real_sqrt(ra / 1.0000000000000002220446);
-	assert nrr <= real_sqrt(ra / 0.9999999999999997779554);
-	sqrt_congruence_lemma(rl / 1.0000000000000002220446, ra / 1.0000000000000002220446);
-	sqrt_congruence_lemma(ra / 0.9999999999999997779554, ru / 0.9999999999999997779554);
-	assert nrr >= real_sqrt(rl / 1.0000000000000002220446);
-	assert nrr <= real_sqrt(ru / 0.9999999999999997779554);
-	sqrt_congruence_lemma(rx * 0.99999 * (1 - d_eps) * (1 - d_eps) / 1.0000000000000002220446, rl / 1.0000000000000002220446);
-	assert nrr >= real_sqrt(rx * 0.99999 * (1 - d_eps) * (1 - d_eps) / 1.0000000000000002220446);
-	sqrt_congruence_lemma(ru / 0.9999999999999997779554,rx * 1.00001 * (1 + d_eps) * (1 + d_eps) / 0.9999999999999997779554);
-	assert nrr <= real_sqrt(rx * 1.00001 * (1 + d_eps) * (1 + d_eps) / 0.9999999999999997779554);
-	sqrt_extraction_lemma(rx,1.00001 * (1 + d_eps) * (1 + d_eps) / 0.9999999999999997779554);
-	sqrt_extraction_lemma(rx,0.99999 * (1 - d_eps) * (1 - d_eps) / 1.0000000000000002220446);	
-	assert nrr <= real_sqrt(rx) * real_sqrt(1.00001 * (1 + d_eps) * (1 + d_eps) / 0.9999999999999997779554);
-	assert nrr >= real_sqrt(rx) * real_sqrt(0.99999 * (1 - d_eps) * (1 - d_eps) / 1.0000000000000002220446);	
-	sqrt_congruence_lemma(0.99999*0.99999, 0.99999 * (1 - d_eps) * (1 - d_eps) / 1.0000000000000002220446);
-	real_sqrt_lemma(0.99999*0.99999,0.99999);
-	sqrt_congruence_lemma(1.00001 * (1 + d_eps) * (1 + d_eps) / 0.9999999999999997779554, 1.00001*1.00001);
-	real_sqrt_lemma(1.00001*1.00001,1.00001);
-	assert real_sqrt(1.00001 * (1 + d_eps) * (1 + d_eps) / 0.9999999999999997779554) <= 1.00001;
-	assert real_sqrt(0.99999 * (1 - d_eps) * (1 - d_eps) / 1.0000000000000002220446) >= 0.99999;
-	sqrt_pos_lemma(rx);
-        leq_preservation_lemma(real_sqrt(1.00001 * (1 + d_eps) * (1 + d_eps) / 0.9999999999999997779554),1.00001,real_sqrt(rx));
-	assert real_sqrt(1.00001 * (1 + d_eps) * (1 + d_eps) / 0.9999999999999997779554) * real_sqrt(rx) <= 1.00001 * real_sqrt(rx);
+    product_sign_lemma(rx,rct2);
+    assert rl >= rx * rct2 * md_eps;
+    assert rct2 >= 0.99999 * md_eps;
+    assert rx * (1 - d_eps) > 0;
+    leq_preservation_lemma(0.99999 * md_eps, rct2, rx * md_eps);
+    assert rct2 * rx * md_eps >= 0.99999 * md_eps * rx * md_eps;
+    leq_transitivity_lemma(rx * 0.99999 * md_eps * md_eps,rx * rct2 * md_eps,rl);
+    assert rl >= rx * 0.99999 * md_eps * md_eps;
+    product_sign_lemma(rx,rct1);
+    assert ru <= rx * rct1 * pd_eps;
+    assert rct1 <= 1.00001 * pd_eps;
+    leq_preservation_lemma(rct1, 1.00001 * pd_eps,rx * pd_eps);
+    assert ru <= rx * 1.00001 * pd_eps * pd_eps;
+    
+    assert ra <= nrr * nrr * pd_eps;
+    assert ra >= nrr * nrr * md_eps;
+    assert ra / pd_eps <= nrr * nrr;
+    assert ra / md_eps >= nrr * nrr;
+    sqrt_congruence_lemma(ra / pd_eps, nrr * nrr);
+    sqrt_congruence_lemma(nrr * nrr, ra / md_eps);
+    real_sqrt_lemma(nrr*nrr,nrr);
+    assert nrr >= real_sqrt(ra / pd_eps);
+    assert nrr <= real_sqrt(ra / md_eps);
+    sqrt_congruence_lemma(rl / pd_eps, ra / pd_eps);
+    sqrt_congruence_lemma(ra / md_eps, ru / md_eps);
+    assert nrr >= real_sqrt(rl / pd_eps);
+    assert nrr <= real_sqrt(ru / md_eps);
+    sqrt_congruence_lemma(rx * 0.99999 * md_eps * md_eps / pd_eps, rl / pd_eps);
+    assert nrr >= real_sqrt(rx * 0.99999 * md_eps * md_eps / pd_eps);
+    sqrt_congruence_lemma(ru / md_eps,rx * 1.00001 * (1 + d_eps) * (1 + d_eps) / md_eps);
+    assert nrr <= real_sqrt(rx * 1.00001 * pd_eps * pd_eps / md_eps);
+    sqrt_extraction_lemma(rx,1.00001 * pd_eps * pd_eps / md_eps);
+    sqrt_extraction_lemma(rx,0.99999 * (1 - d_eps) * (1 - d_eps) / pd_eps);	
+    assert nrr <= real_sqrt(rx) * real_sqrt(1.00001 * pd_eps * pd_eps / md_eps);
+    assert nrr >= real_sqrt(rx) * real_sqrt(0.99999 * md_eps * md_eps / pd_eps);	
+    sqrt_congruence_lemma(0.99999*0.99999, 0.99999 * md_eps * md_eps / pd_eps);
+    real_sqrt_lemma(0.99999*0.99999,0.99999);
+    sqrt_congruence_lemma(1.00001 * pd_eps * pd_eps / md_eps, 1.00001*1.00001);
+    real_sqrt_lemma(1.00001*1.00001,1.00001);
+    assert real_sqrt(1.00001 * pd_eps * pd_eps / md_eps) <= 1.00001;
+    assert real_sqrt(0.99999 * (1 - d_eps) * (1 - d_eps) / pd_eps) >= 0.99999;
+    sqrt_pos_lemma(rx);
+    leq_preservation_lemma(real_sqrt(1.00001 * pd_eps * pd_eps / md_eps),1.00001,real_sqrt(rx));
+    assert real_sqrt(1.00001 * pd_eps * pd_eps / md_eps) * real_sqrt(rx) <= 1.00001 * real_sqrt(rx);
 
-        leq_preservation_lemma(0.99999,real_sqrt(0.99999 * (1 - d_eps) * (1 - d_eps) / 1.0000000000000002220446),real_sqrt(rx));
-	assert nrr <= real_sqrt(rx) * 1.00001;
-	assert nrr >= real_sqrt(rx) * 0.99999;
-	assert relative_error(real_sqrt(rx), nrr, 0.00001) == true;
-}*/
+    leq_preservation_lemma(0.99999,real_sqrt(0.99999 * md_eps * md_eps / pd_eps),real_sqrt(rx));
+    assert nrr <= real_sqrt(rx) * 1.00001;
+    assert nrr >= real_sqrt(rx) * 0.99999;
+    assert relative_error(real_sqrt(rx), nrr, 0.00001) == true;
+}
 
-lemma void not_stop_condition_lemma(real ra, real ru, real rl, real rct1, real rct2, real nrr, real rx);
+lemma void not_stop_condition_lemma(real ra, real ru, real rl, real rct1, real rct2, real nrr, real rx)
     requires ra > ru || ra < rl &*&
+    nrr > 0 &*&
     rx > 0 &*&
     relative_error(nrr * nrr, ra, double_eps) == true &*&
     relative_error(0.99999, rct2, d_eps) == true &*&
@@ -414,6 +435,62 @@ lemma void not_stop_condition_lemma(real ra, real ru, real rl, real rct1, real r
     relative_error(rx * rct2, rl , d_eps) == true &*&
     relative_error(rx * rct1, ru , d_eps) == true;
     ensures nrr > real_sqrt(rx) * 1.000001 || nrr < real_sqrt(rx) * 0.999999;
+{
+    sqrt_pos_lemma(rx);
+    product_sign_lemma(rx,rct2);
+    assert rl <= rx * rct2 * (1 + d_eps);
+    assert rct2 <= 0.99999*(1 + d_eps);
+    leq_preservation_lemma(rct2, 0.99999 * (1 + d_eps), rx * (1 + d_eps));
+    assert rct2 * rx * (1 + d_eps) <= 0.99999*(1 + d_eps) * rx * (1 + d_eps);
+    leq_transitivity_lemma(rl, rx * rct2 * (1 + d_eps), rx * 0.99999 * (1 + d_eps) * (1 + d_eps));
+    assert rl <= rx * 0.99999 * (1 + d_eps) * (1 + d_eps);
+    product_sign_lemma(rx,rct1);
+    assert ru >= rx * rct1 * (1 - d_eps);
+    assert rct1 >= 1.00001 * (1 - d_eps);
+    leq_preservation_lemma(1.00001 * (1 - d_eps), rct1, rx * (1 - d_eps));
+    assert ru >= 1.00001 * rx * (1 - d_eps) * (1 - d_eps);
+    
+    strict_product_sign_lemma(nrr,nrr);
+    assert ra <= nrr * nrr * (1 + double_eps);
+    assert ra >= nrr * nrr * (1 - double_eps);
+    assert ra / 1.0000000000000002220446 <= nrr * nrr; // 1 + double_eps
+    assert ra / 0.9999999999999997779554 >= nrr * nrr; // 1 - double_eps;
+    sqrt_congruence_lemma(ra / 1.0000000000000002220446, nrr * nrr);
+    sqrt_congruence_lemma(nrr * nrr, ra / 0.9999999999999997779554);
+    real_sqrt_lemma(nrr*nrr,nrr);
+    assert nrr >= real_sqrt(ra / 1.0000000000000002220446);
+    assert nrr <= real_sqrt(ra / 0.9999999999999997779554);
+    if (ra > ru) {
+    	sqrt_congruence_lemma(ru / 1.0000000000000002220446, ra / 1.0000000000000002220446);
+    	assert nrr >= real_sqrt(ru / 1.0000000000000002220446);
+    	sqrt_congruence_lemma(1.00001 * rx * (1 - d_eps) * (1 - d_eps) / 1.0000000000000002220446, ru / 1.0000000000000002220446);
+    	assert nrr >= real_sqrt(rx * 1.00001 * (1 - d_eps) * (1 - d_eps) / 1.0000000000000002220446);
+    	sqrt_extraction_lemma(rx, 1.00001 * (1 - d_eps) * (1 - d_eps) / 1.0000000000000002220446);
+    	assert nrr >= real_sqrt(rx) * real_sqrt(1.00001 * (1 - d_eps) * (1 - d_eps) / 1.0000000000000002220446);
+    	sqrt_congruence_lemma(1.000009,1.00001 * (1 - d_eps) * (1 - d_eps) / 1.0000000000000002220446);
+    	leq_preservation_lemma(real_sqrt(1.000009),real_sqrt(1.00001 * (1 - d_eps) * (1 - d_eps) / 1.0000000000000002220446), real_sqrt(rx));
+    	assert nrr >= real_sqrt(rx) * real_sqrt(1.000009);
+    	sqrt_congruence_lemma(1.000004*1.000004,1.000009);
+    	real_sqrt_lemma(1.000004*1.000004,1.000004);
+    	leq_preservation_lemma(1.000004,real_sqrt(1.000009),real_sqrt(rx));
+    	assert nrr >= real_sqrt(rx) * 1.000004;   	
+    } else {
+        assert ra < rl;
+        sqrt_congruence_lemma(ra / 0.9999999999999997779554, rl / 0.9999999999999997779554);
+        assert nrr <= real_sqrt(rl / 0.9999999999999997779554);
+        sqrt_congruence_lemma(rl / 0.9999999999999997779554, rx * 0.99999 * (1 + d_eps) * (1 + d_eps) / 0.9999999999999997779554);
+        sqrt_extraction_lemma(rx, 0.99999 * (1 + d_eps) * (1 + d_eps) / 0.9999999999999997779554);
+        sqrt_congruence_lemma(0.99999 * (1 + d_eps) * (1 + d_eps) / 0.9999999999999997779554, 0.999991);
+        leq_preservation_lemma(real_sqrt(0.99999 * (1 + d_eps) * (1 + d_eps) / 0.9999999999999997779554), real_sqrt(0.999991), real_sqrt(rx));
+        assert nrr <= real_sqrt(rx) * real_sqrt(0.999991);
+        sqrt_congruence_lemma(0.999991, 0.999996*0.999996);
+        real_sqrt_lemma(0.999996*0.999996,0.999996);
+        leq_preservation_lemma(real_sqrt(0.999991),0.999996,real_sqrt(rx));
+        assert nrr <= real_sqrt(rx) * 0.999996;
+    }
+    
+}
+
 
 @*/
 

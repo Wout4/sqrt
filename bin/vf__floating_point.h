@@ -8,6 +8,8 @@
 #define d_eps 2.220446e-16
 #define ld_eps 1.084202e-19
 
+#define md_eps 0.9999999999999997779554 // = 1 - d_eps
+#define pd_eps 1.0000000000000002220446 // = 1 + d_eps
 
 //#include "math.h"
 // VeriFast interprets floating-point operations as calls of the functions declared below.
