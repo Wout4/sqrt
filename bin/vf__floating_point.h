@@ -44,8 +44,31 @@ fixpoint option<real> real_of_float(float x);
 
 fixpoint real real_of_int(int x);
 
-//predicate relative_error(real x, real rx, real epsilon) = //boolean fixpoint
-  //  rx <= real_abs(epsilon * x) + x &*& rx >= x - real_abs(epsilon * x);
+fixpoint bool is_pos_infinity(double x);
+
+fixpoint bool is_neg_infinity(double x);
+
+fixpoint real next(real x);
+
+fixpoint real prev(real x);
+
+lemma void next_lemma(real x, real next);
+    requires next == next(x);
+    ensures next > x &*&
+    next <= x + real_abs(x * d_eps);
+    
+lemma void prev_lemma(real x, real prev);
+    requires prev == prev(x);
+    ensures prev < x &*&
+    prev >= x - real_abs(x * d_eps);
+    
+lemma void next_prev_lemma(real x, real nextprev);
+    requires nextprev == next(prev(x));
+    ensures nextprev >= x;
+    
+lemma void prev_next_lemma(real x, real prevnext);
+    requires prevnext == prev(next(x));
+    ensures prevnext <= x;
 
 fixpoint bool relative_error(real x, real approximation, real epsilon) {
     return x == 0 ? approximation == 0 : approximation <= x + real_abs(epsilon * x) && approximation >= x - real_abs(epsilon * x);
@@ -228,11 +251,14 @@ float vf__float_add(float x, float y);
     //@ terminates;
 
 double vf__double_add(double x, double y);
-    //@ requires real_of_double(x) == some(?rx) &*& real_of_double(y) == some(?ry);
+    /*@ requires real_of_double(x) == some(?rx) &*& 
+    real_of_double(y) == some(?ry) &*&
+    rx == 0 ? ensures real_of_double(result) == some(?rr) &*& rr == ry:
+    ry == 0 ? ensures real_of_double(result) == some(?rr) &*& rr == rx: true;
+    @*/ 
     /*@ ensures real_of_double(result) == some(?rr) &*& 
-    	relative_error(rx + ry, rr, double_eps) == true &*& 
-    	rx == 0 ? rr == ry : true &*& 
-    	ry == 0 ? rr == rx : true;
+        rr == next(rx + ry) || rr == prev(rx + ry) || rr == rx + ry &*& // naar boven afgerond, naar beneden afgerond of exacts
+    	relative_error(rx + ry, rr, double_eps) == true;
     @*/
     //@ terminates;
 
@@ -249,8 +275,15 @@ float vf__float_sub(float x, float y);
     //@ terminates;
 
 double vf__double_sub(double x, double y);
-    //@ requires real_of_double(x) == some(?rx) &*& real_of_double(y) == some(?ry);
-    //@ ensures real_of_double(result) == some(?rr) &*& relative_error(rx - ry, rr, double_eps) == true;
+    /*@ requires real_of_double(x) == some(?rx) &*& 
+    is_pos_infinity(y) ? ensures is_neg_infinity(result) == true:
+    is_neg_infinity(y) ? ensures is_pos_infinity(result) == true:	
+    ensures real_of_double(y) == some(?ry) &*& 
+    real_of_double(result) == some(?rr) &*& 
+    rr == next(rx - ry) || rr == prev(rx - ry) || rr == rx - ry &*&
+    relative_error(rx - ry, rr, double_eps) == true;
+    @*/
+    //@ ensures true;
     //@ terminates;
 
 long double vf__long_double_sub(long double x, long double y);
@@ -279,8 +312,17 @@ float vf__float_div(float x, float y);
     //@ terminates;
 
 double vf__double_div(double x, double y);
-    //@ requires true;
-    //@ ensures true;
+    /*@ requires real_of_double(x) == some(?rx) &*&
+    real_of_double(y) == some(?ry) &*&
+    rx > 0 && ry == 0 ? ensures is_pos_infinity(result) == true &*& 
+    			is_neg_infinity(result) == false:
+    rx < 0 && ry == 0 ? ensures is_neg_infinity(result) == true &*& 
+    			is_pos_infinity(result) == false: 
+    true; 
+    @*/ /*@
+    ensures real_of_double(result) == some(?rr) &*& 
+    relative_error(real_div(rx,ry), rr, double_eps) == true;
+    @*/
     //@ terminates;
 
 long double vf__long_double_div(long double x, long double y);
