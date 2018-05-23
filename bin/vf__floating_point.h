@@ -298,7 +298,10 @@ float vf__float_mul(float x, float y);
 
 double vf__double_mul(double x, double y);
     //@ requires real_of_double(x) == some(?rx) &*& real_of_double(y) == some(?ry);
-    //@ ensures real_of_double(result) == some(?rr) &*& relative_error(rx * ry, rr, double_eps) == true;
+    /*@ ensures real_of_double(result) == some(?rr) &*& 
+    rr == next(rx * ry) || rr == prev(rx * ry) || rr == rx * ry &*&
+    relative_error(rx * ry, rr, double_eps) == true;
+    @*/
     //@ terminates;
 
 long double vf__long_double_mul(long double x, long double y);
@@ -318,10 +321,11 @@ double vf__double_div(double x, double y);
     			is_neg_infinity(result) == false:
     rx < 0 && ry == 0 ? ensures is_neg_infinity(result) == true &*& 
     			is_pos_infinity(result) == false: 
-    true; 
-    @*/ /*@
     ensures real_of_double(result) == some(?rr) &*& 
-    relative_error(real_div(rx,ry), rr, double_eps) == true;
+    rr == next(real_div(rx,ry)) || rr == prev(real_div(rx,ry)) || rr == real_div(rx,ry) &*&
+    relative_error(real_div(rx,ry), rr, double_eps) == true; 
+    @*/ /*@
+    ensures true;
     @*/
     //@ terminates;
 
