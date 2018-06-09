@@ -87,18 +87,18 @@ fixpoint fp_double double_fmax(fp_double x, fp_double y){
     switch (x) {
         case real_double(rx): 
             return switch (y) {
-    		case real_double(ry): return rx <= ry ? real_double(ry): real_double(rx);
-        	case pos_inf: return pos_inf;
-        	case neg_inf: return real_double(rx);
-        	case NaN: return real_double(rx);
+    		case real_double(ry): return rx <= ry ? y: x;
+        	case pos_inf: return y;
+        	case neg_inf: return x;
+        	case NaN: return x;
     	    };
-    	case pos_inf: return pos_inf;
+    	case pos_inf: return x;
         case neg_inf: 
             return switch (y) {
-    		case real_double(ry): return real_double(ry);
-        	case pos_inf: return pos_inf;
-        	case neg_inf: return neg_inf;
-                case NaN: return neg_inf;
+    		case real_double(ry): return y;
+        	case pos_inf: return y;
+        	case neg_inf: return y;
+                case NaN: return x;
     	    };
         case NaN: return y;
     }
