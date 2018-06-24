@@ -120,7 +120,7 @@ lemma void sqrt_pos_lemma(real x);
     ensures real_sqrt(x) > 0;
     
 lemma void sqrt_congruence_lemma(real x, real y);
-    requires x <= y &*& x>=0 &*& y>=0;
+    requires x <= y &*& x>=0;
     ensures real_sqrt(x) <= real_sqrt(y);
     
 lemma void sqrt_congruence_lemma2(real x, real y);

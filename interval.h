@@ -12,11 +12,29 @@ struct interval {
 // predicate interval(pointer, x)
 /*@
 
+lemma void pos_inf_interval_lemma(struct interval *x, real x1)
+    requires x->a |-> ?xa &*& x->b |-> ?xb &*& fp_of_double(xa) == pos_inf &*& between(fp_of_double(xa),fp_of_double(xb),x1) == true;
+    ensures fp_of_double(xb) == pos_inf &*& x->a |-> xa &*& x->b |-> xb;
+{   
+    assert between(fp_of_double(xa),fp_of_double(xb),x1) == true;
+    assert leq_double_real(pos_inf,x1) == true;
+    assert leq_real_double(x1,fp_of_double(xb)) == true;
+    if (fp_of_double(xb) != pos_inf){
+        assert fp_of_double(xb) == real_double(?rxb);
+        real_double_lemma(xb);
+    } else {}
+}
+
+fixpoint bool is_real_inf(real x);
+
+lemma void real_inf_mult_lemma(real x, real a);
+    requires is_real_inf(x) == true &*& a > 0;
+    ensures x * a > max_dbl;
 
 fixpoint bool leq_double_real(fp_double a, real x){
     switch (a) {
     	case real_double(ra): return ra <= x;
-    	case pos_inf: return x > max_dbl * 2;
+    	case pos_inf: return x > max_dbl * 2 && is_real_inf(x);
     	case neg_inf: return true;
     	case NaN: return false;
     }
@@ -454,6 +472,87 @@ struct interval *double_mult(struct interval *first, struct interval *second)
             assert fp_of_double(fa) == real_double(?rfa);
             if(is_real_double(sa)) {
                 assert fp_of_double(sa) == real_double(?rsa);
+                if (fp_of_double(l) == pos_inf){
+                    assert rfa * rsa >= max_dbl;
+                    assert fp_of_double(ra) == real_double(max_dbl);
+                    assert x1 >= rfa;
+                    assert x2 >= rsa;
+                    assert fp_of_double(temp1) == pos_inf;
+                    assert double_fmin(fp_of_double(temp1),fp_of_double(temp2)) == pos_inf;
+                    assert fp_of_double(temp2) != NaN;
+                    assert fp_of_double(temp2) != neg_inf;
+                    if (is_real_double(temp2)){
+                        assert fp_of_double(temp2) == real_double(?rtemp2);
+                        assert double_fmin(pos_inf,real_double(rtemp2)) == real_double(rtemp2);
+                        assert fp_of_double(temp1) == pos_inf;
+                        assert double_fmin(fp_of_double(temp1),real_double(rtemp2)) == real_double(rtemp2);
+                        assert false;
+                    }
+                    assert fp_of_double(temp2) != neg_inf && fp_of_double(temp2) != NaN && !is_real_double(temp2); // nodig voor volgende assert
+                    assert fp_of_double(temp2) == pos_inf;
+                    fmin_inf_lemma(temp2,z,w);
+                    fmin_inf_lemma(temp1,x,y);
+                    assert fp_of_double(y) == pos_inf;
+                    assert fp_of_double(w) == pos_inf;
+                    assert fp_of_double(z) == pos_inf;
+                    switch (fp_of_double(fb)){
+                        case real_double(rfb):
+                            switch (fp_of_double(sb)){
+                                case real_double(rsb): 
+                                    assert rfb * rsb > max_dbl;
+                                    if (rfb < 0){
+                                        assert rsb < 0;
+                                        assert x1 <= rfb;
+                                        assert x2 <= rsb;
+                                        assert x1 * x2 >= rfb * rsb;
+                                        assert rfb * rsb >= max_dbl;
+                                        leq_transitivity_lemma(max_dbl,rfb*rsb,x1*x2); // zelfs met z3
+                                        assert x1 * x2 >= max_dbl;
+                                    } else {
+                                        assert rfb > 0;
+                                        assert rsb > 0;
+                                        assert fp_of_double(y) == pos_inf;
+                                        assert rfa * rsb > max_dbl;
+                                        assert rfa !=0;
+                                        if (rfa < 0){ // nodig om te bewijzen dat dit nooit gebeurt
+                                            //assert rfa * rsb < 0; 
+                                            assert false;
+                                        }
+                                        assert rfa > 0;
+                                        assert rsa > 0;
+                                        assert x1 >= rfa;
+                                        assert x2 >= rsa;
+                                        lt_transitivity_lemma(0,rfa,x1);
+                                        assert x1 > 0;
+                                        assert x2 > 0;
+                                        assert x1 * x2 >= rfa * rsa;
+                                        assert rfa * rsa >= max_dbl;
+                                        leq_transitivity_lemma(max_dbl,rfa*rsa,x1*x2);
+                                        assert x1 * x2 >= max_dbl;
+                                    }
+                                case pos_inf: 
+                                    assert rfb > 0;
+                                    assert rfa > 0;
+                                    assert rsa > 0;
+                                    assert x1 > 0;
+                                        assert x2 > 0;
+                                    lt_transitivity_lemma(0,rfa,x1);
+                                    leq_transitivity_lemma(max_dbl,rfa*rsa,x1*x2);
+                                case neg_inf: assert true;
+                            }
+                        case pos_inf:
+                        case neg_inf:
+                        
+                    }
+                    assert x1 * x2 >= max_dbl;
+                    assert leq_double_real(fp_of_double(ra), x1 * x2) == true;
+ 
+                } else if (fp_of_double(l) == neg_inf){
+                
+                } else {
+                    assert fp_of_double(l) == real_double(?rl);
+                }
+                    
             } else if (fp_of_double(sa) == pos_inf) {
                 if (rfa == 0) {
                     assert fp_of_double(x) == real_double(0);
@@ -464,8 +563,14 @@ struct interval *double_mult(struct interval *first, struct interval *second)
                     product_sign_lemma(x1,x2);
                     assert x1 * x2 >= 0;
                     assert leq_double_real(fp_of_double(ra), x1 * x2) == true;
+                } else if (rfa > 0){
+                    assert fp_of_double(ra) == real_double(?rra);
+                    assert rra == max_dbl;
+                    assert x1 > 0;
+                    assert x2 >= 2*max_dbl;
+                    real_inf_mult_lemma(x2,x1); // LEMMA GEBRUIKT
                 } else {
-                    
+                    assert fp_of_double(ra) == neg_inf;
                 }
             } else if (fp_of_double(sa) == neg_inf) {
                 if (rfa == 0) {
@@ -474,7 +579,18 @@ struct interval *double_mult(struct interval *first, struct interval *second)
                     assert x1 == 0;
                     multiply_zero_lemma(x1,x2);
                     assert x1 * x2 == 0;
-                } else {}
+                } else if (rfa > 0){
+                    assert fp_of_double(ra) == neg_inf;
+                } else {
+                    assert double_fmin(fp_of_double(x),fp_of_double(y)) == fp_of_double(x);
+                    assert fp_of_double(l) == fp_of_double(x);
+                    assert fp_of_double(fb) == real_double(?rfb);
+                    //assert rfb < 0;
+                    //assert x1 < 0;
+                    //assert x2 <= 2*min_dbl;
+                    //real_inf_mult_lemma(x2,x1);
+                    assert leq_double_real(fp_of_double(ra), x1 * x2) == true;
+                }
                 
             
             } else {}
@@ -483,7 +599,10 @@ struct interval *double_mult(struct interval *first, struct interval *second)
                 assert fp_of_double(sa) == real_double(?rsa);
                 if (rsa == 0) {
                     product_sign_lemma(x1,x2);
-                } else {}
+                } else if (rsa > 0){
+                    real_inf_mult_lemma(x1,x2);
+                } else {
+                }
             } else if (fp_of_double(sa) == pos_inf) {
             
             } else if (fp_of_double(sa) == neg_inf) {
@@ -496,11 +615,25 @@ struct interval *double_mult(struct interval *first, struct interval *second)
                     assert fp_of_double(sb) == real_double(?rsb);
                     assert rsb == 0;
                     multiply_zero_lemma(x1,x2);
-                } else {}
+                } else if (rsa < 0) {
+                    assert double_fmin(fp_of_double(x),fp_of_double(y)) == fp_of_double(x);
+                    assert fp_of_double(l) == fp_of_double(x);
+                    assert fp_of_double(fb) == real_double(?rsb);  // nodig
+                } else {
+                }
             } else if (fp_of_double(sa) == pos_inf) {
             
             } else if (fp_of_double(sa) == neg_inf) {
-            
+                assert double_fmin(fp_of_double(x),fp_of_double(y)) == fp_of_double(x);
+                assert fp_of_double(l) == fp_of_double(x);
+                switch (fp_of_double(fb)){
+                    case neg_inf:
+                    case real_double(rfb):
+                    case pos_inf: assert false;
+                    case NaN: assert false;
+                }
+                assert is_real_double(fb) || fp_of_double(fb) == neg_inf;
+                assert is_real_double(sb) || fp_of_double(sb) == neg_inf;
             } else {}
         } else {}
     } else if (fp_of_double(l) == fp_of_double(y)) {
@@ -606,8 +739,33 @@ struct interval *double_mult(struct interval *first, struct interval *second)
             assert fp_of_double(fa) == real_double(?rfa);
             if(is_real_double(sa)) {
                 assert fp_of_double(sa) == real_double(?rsa);
+                if (is_real_double(u)) {
+                    assert fp_of_double(u) == real_double(?ru);
+                    assert rsa * rfa < min_dbl || ru >= round_down(rsa * rfa);
+                } else if (fp_of_double(u) == pos_inf) {
+                
+                } else {
+                    assert is_real_double(fb) || is_real_double(sb);
+                    if (is_real_double(fb)) {
+                        assert fp_of_double(fb) == real_double(?rfb);
+                        if (rfb == rfa) {
+                        
+                        } else {
+                            //assert fp_of_double(sb) == real_double(?rsb);
+                            //assert rsb == rsa;
+                        }
+                    } else {
+                        assert fp_of_double(sb) == real_double(?rsb);
+                        assert rsb == rsa;
+                        assert x2 == rsa;
+                        if (is_real_double(rb)) {
+                            assert fp_of_double(rb) == real_double(?rrb);
+                            assert rrb == next_double(ru);
+                        }
+                    }
+                    assert false;
+                }
             } else if (fp_of_double(sa) == pos_inf) {
-                assert fp_of_double(ra) == pos_inf || rfa == 0; // 0 * INF mogelijk
                 if (rfa == 0) {
                     switch (fp_of_double(fb)) {
                         case real_double(rfb): 
@@ -630,14 +788,38 @@ struct interval *double_mult(struct interval *first, struct interval *second)
                         case NaN: assert true;
                     };
                     assert leq_real_double(x1 * x2, fp_of_double(rb)) == true;
+                } else if (rfa < 0) {
+                    assert fp_of_double(u) == neg_inf;
+                    assert x2 >= 2*max_dbl;
+		    assert fp_of_double(fb) == real_double(?rfb);
+		    if (rfb == 0) {
+		        assert fp_of_double(w) == real_double(?rw);
+		        assert rw == 0;
+		    } else {
+                    	assert x1 < 0;
+                    	assert x1 * x2 <= neg_inf;
+                    }
                 } else {
-                    
+                    assert fp_of_double(u) == pos_inf;
                 }
             } else if (fp_of_double(sa) == neg_inf) {
                 if(rfa == 0) {
                     assert fp_of_double(fb) == real_double(?rfb);
                     assert rfb == 0;
-                } else {}
+                } else if (rfa < 0){
+                    assert fp_of_double(u) == pos_inf;
+                } else {
+                    assert fp_of_double(u) == neg_inf;
+                    assert x1 > 0;
+                    assert leq_double_real(neg_inf,x2) == true;
+                    if (fp_of_double(fb) == pos_inf) {
+                        
+                    } else {
+                        assert fp_of_double(fb) == real_double(?rfb);
+                        assert fp_of_double(sb) == neg_inf;
+                    }
+                    assert x1 * x2 <= 2 * min_dbl;
+                }
             
             } else {}
         } else if (fp_of_double(fa) == pos_inf){
@@ -653,10 +835,26 @@ struct interval *double_mult(struct interval *first, struct interval *second)
                         assert fp_of_double(fb) == real_double(?rfb);
                         
                     }
-                } else {}
+                } else if (rsa < 0){
+                    assert fp_of_double(u) == neg_inf;
+                    real_double_lemma(sa);
+                    assert fp_of_double(sb) == real_double(?rsb);
+                    if (fp_of_double(fb) != pos_inf){
+                        assert fp_of_double(fb) == real_double(?rfb);
+                    } else {
+                        assert fp_of_double(fb) == pos_inf;
+                    }
+                    
+                } else {
+                    assert fp_of_double(u) == pos_inf;
+                }
             } else if (fp_of_double(sa) == pos_inf) {
             
             } else if (fp_of_double(sa) == neg_inf) {
+                assert fp_of_double(u) == neg_inf;
+                if(fp_of_double(fb) != pos_inf) {
+                    assert fp_of_double(fb) == real_double(?rfb);
+                }
             
             } else {}
         } else if (fp_of_double(fa) == neg_inf) {
@@ -670,9 +868,22 @@ struct interval *double_mult(struct interval *first, struct interval *second)
                         assert fp_of_double(fb) == real_double(?rfb);
                         assert x1 >= 0;
                     }
-                } else {}
+                } else if (rsa < 0) {
+                    assert fp_of_double(u) == pos_inf;
+                } else {
+                    assert fp_of_double(u) == neg_inf;
+                    if (fp_of_double(fb) == neg_inf) {
+                        
+                    } else {
+                        assert fp_of_double(fb) == real_double(?rfb);
+                        
+                    }
+
+                }
             } else if (fp_of_double(sa) == pos_inf) {
-            
+                assert fp_of_double(u) == neg_inf;
+                pos_inf_interval_lemma(second,x2);
+                assert fp_of_double(sb) == pos_inf;
             } else if (fp_of_double(sa) == neg_inf) {
             
             } else {}
@@ -697,7 +908,11 @@ struct interval *double_mult(struct interval *first, struct interval *second)
             if(is_real_double(sb)) {
                 assert fp_of_double(sb) == real_double(?rsb);
                 if (rsb == 0){
-                    assert fp_of_double(sa) == real_double(?rsa);
+                    //assert fp_of_double(sa) == real_double(?rsa);
+                    assert x2 <= 0;
+                    assert x1 >= 0;
+                    negative_product_lemma(x2,x1);
+                    assert x1 * x2 <= 0;
                     
                 } else {}
             } else if (fp_of_double(sb) == pos_inf) {
@@ -720,13 +935,21 @@ struct interval *double_mult(struct interval *first, struct interval *second)
             if(is_real_double(sb)) {
                 assert fp_of_double(sb) == real_double(?rsb);
             } else if (fp_of_double(sb) == pos_inf) {
-            
+                if (rfb == 0){
+                    assert x1 <= 0;
+                    assert x2 >= 0;
+                    negative_product_lemma(x1,x2);
+                    assert x1 * x2 <= 0;
+                }
             } else if (fp_of_double(sb) == neg_inf) {
             
             } else {}
         } else if (fp_of_double(fb) == pos_inf){
             if(is_real_double(sb)) {
                 assert fp_of_double(sb) == real_double(?rsb);
+                if (rsb == 0){
+                    assert fp_of_double(sa) == real_double(?rsa);
+                }
             } else if (fp_of_double(sb) == pos_inf) {
             
             } else if (fp_of_double(sb) == neg_inf) {
@@ -735,6 +958,9 @@ struct interval *double_mult(struct interval *first, struct interval *second)
         } else if (fp_of_double(fb) == neg_inf) {
             if(is_real_double(sb)) {
                 assert fp_of_double(sb) == real_double(?rsb);
+                if (rsb == 0) {
+                    assert fp_of_double(sa) == real_double(?rsa);
+                }
             } else if (fp_of_double(sb) == pos_inf) {
             
             } else if (fp_of_double(sb) == neg_inf) {
@@ -748,13 +974,21 @@ struct interval *double_mult(struct interval *first, struct interval *second)
             if(is_real_double(sa)) {
                 assert fp_of_double(sa) == real_double(?rsa);
             } else if (fp_of_double(sa) == pos_inf) {
-            
+                if (rfb == 0) {
+                    assert x1 <= 0;
+                    assert x2 >= 2*max_dbl;
+                    negative_product_lemma(x1,x2);
+                    assert x1 * x2 <= 0;
+                }
             } else if (fp_of_double(sa) == neg_inf) {
             
             } else {}
         } else if (fp_of_double(fb) == pos_inf){
             if(is_real_double(sa)) {
                 assert fp_of_double(sa) == real_double(?rsa);
+                if (rsa == 0) {
+                    assert fp_of_double(sb) == real_double(?rsb);
+                }
             } else if (fp_of_double(sa) == pos_inf) {
             
             } else if (fp_of_double(sa) == neg_inf) {
@@ -763,6 +997,9 @@ struct interval *double_mult(struct interval *first, struct interval *second)
         } else if (fp_of_double(fb) == neg_inf) {
             if(is_real_double(sa)) {
                 assert fp_of_double(sa) == real_double(?rsa);
+                if (rsa == 0) {
+                
+                }
             } else if (fp_of_double(sa) == pos_inf) {
             
             } else if (fp_of_double(sa) == neg_inf) {
@@ -929,6 +1166,12 @@ lemma void fmax_lemma(double temp2, double w, double z)
     	
     }
 }
+
+lemma void fmin_inf_lemma(double min, double x, double y)
+    requires fp_of_double(min) == double_fmin(fp_of_double(x), fp_of_double(y)) &*& 
+        fp_of_double(min) == pos_inf;
+    ensures fp_of_double(x) == pos_inf &*& fp_of_double(y) == pos_inf;
+{}
 
 lemma void fmin_lemma(double temp, double x, double y)
     requires fp_of_double(temp) == double_fmin(fp_of_double(x),fp_of_double(y));

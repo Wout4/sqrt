@@ -108,6 +108,7 @@ lemma void real_of_double_lemma(double x);
     requires real_of_double(x) == some(?rx);
     ensures ! is_pos_infinity(x) &*& ! is_neg_infinity(x);
 
+
 lemma void leq_substitution_lemma(real x, real y, real z);
     requires x <= y &*& y == z;
     ensures x <= z;
@@ -117,6 +118,13 @@ lemma void leq_transitivity_lemma(real a, real b, real c)
     ensures a <= c;
     {}
     
+lemma void lt_transitivity_lemma(real a, real b, real c)
+    requires a < b &*& b <= c;
+    ensures a < c;
+    {}
+
+    
+            
 lemma void associativity_lemma(real a, real b, real c);
     requires true;
     ensures a * b * c == a * (b * c);
@@ -124,6 +132,29 @@ lemma void associativity_lemma(real a, real b, real c);
 lemma void leq_preservation_lemma(real x, real y, real z);
     requires x <= y &*& z >= 0;
     ensures x * z <= y * z;
+    
+lemma void leq_preservation_lemma2(real x, real y, real z);
+    requires x <= y &*& z <= 0;
+    ensures x * z >= y * z;
+   
+    /* 
+lemma void multiplication_leq_substitution(real a,real b, real c,real d)
+    requires a <= c &*& b <= d &*& a * b > 0;
+    ensures a * b <= c * d;
+{
+    if (a < 0){
+        product_sign_lemma2(a,b);
+        assert b <= 0;
+        assert a <= c;
+        leq_preservation_lemma2(a,c,b);
+        assert a * b >= c * b;
+        
+        
+    } else {
+        assert b >= 0;
+    }
+}
+*/
     
 lemma void eq_preservation_lemma(real x, real y ,real z);
     requires x == y;

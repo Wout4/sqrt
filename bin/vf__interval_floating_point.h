@@ -35,6 +35,9 @@ lemma void product_sign_lemma(real x, real y);
     requires x>=0 && y>=0 || x<=0 && y<=0;
     ensures x*y >= 0;
 
+lemma void product_sign_lemma2(real x, real y);
+    requires x*y >= 0;
+    ensures x>=0 && y>=0 || x<=0 && y<=0;
 
 lemma void strict_product_sign_lemma(real x, real y);
     requires x>=0 && y>=0 || x<=0 && y<=0;
@@ -43,6 +46,10 @@ lemma void strict_product_sign_lemma(real x, real y);
 lemma void multiply_zero_lemma(real x, real y);
     requires x == 0 || y == 0;
     ensures x * y == 0;
+    
+lemma void negative_product_lemma(real x, real y);
+    requires x <= 0 &*& y >= 0;
+    ensures x * y <= 0;
 
 fixpoint option<real> real_of_long_double(long double x);
 fixpoint option<real> real_of_double(double x);

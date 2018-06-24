@@ -31,7 +31,7 @@ lemma void real_div_sum_lemma(real a, real b, real c);
     ensures real_div(a + b, c) == real_div(a,c) + real_div(b,c);
     
 lemma void real_div_geq1(real a, real b);
-    requires a >= b &*& a >= 0 &*& b > 0;
+    requires a >= b &*& b > 0;
     ensures real_div(a,b) >= 1;
     
 lemma void real_div_subs_lemma(real a, real b, real c);
@@ -99,7 +99,7 @@ lemma void real_ceiling_pos_lemma(real a);
     requires a >= 0;
     ensures real_ceiling(a) >= 0;
     
-
+    
     
 @*/
 
