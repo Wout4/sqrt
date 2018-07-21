@@ -13,6 +13,9 @@
 
 #define max_dbl 179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368.0
 #define min_dbl -max_dbl
+
+#define min_pos_dbl 4.940656458412465441765687928682213723650598026143247644255856825006755072702087518652998363616359923797965646954457177309266567103559397963987747960107818781263007131903114045278458171678489821036887186360569987307230500063874091535649843873124733972731696151400317153853980741262385655911710266585566867681870395603106249319452715914924553293054565444011274801297099995419319894090804165633245247571478690147267801593552386115501348035264934720193790268107107491703332226844753335720832431936092382893458368060106011506169809753078342277318329247904982524730776375927247874656084778203734469699533647017972677717585125660551199131504891101451037862738167250955837389733598993664809941164205702637090279242767544565229087538682506419718265533447265625e-324
+//#define max_neg_dbl -4.940656458412465441765687928682213723650598026143247644255856825006755072702087518652998363616359923797965646954457177309266567103559397963987747960107818781263007131903114045278458171678489821036887186360569987307230500063874091535649843873124733972731696151400317153853980741262385655911710266585566867681870395603106249319452715914924553293054565444011274801297099995419319894090804165633245247571478690147267801593552386115501348035264934720193790268107107491703332226844753335720832431936092382893458368060106011506169809753078342277318329247904982524730776375927247874656084778203734469699533647017972677717585125660551199131504891101451037862738167250955837389733598993664809941164205702637090279242767544565229087538682506419718265533447265625e-324
 //#include "math.h"
 // VeriFast interprets floating-point operations as calls of the functions declared below.
 
@@ -26,6 +29,14 @@
 lemma void real_double_lemma(double x);
     requires fp_of_double(x) == real_double(?rx);
     ensures rx <= max_dbl &*& rx >= min_dbl;
+    
+lemma void min_pos_double_lemma(double x);
+    requires fp_of_double(x) == real_double(?rx) &*& rx > 0;
+    ensures rx >= min_pos_dbl;
+    
+lemma void max_neg_double_lemma(double x);
+    requires fp_of_double(x) == real_double(?rx) &*& rx < 0;
+    ensures rx <= 0-min_pos_dbl;
 
 
 fixpoint real real_div(real x, real y);
@@ -82,6 +93,10 @@ lemma void prev_double_lemma(real x, real prev);
     ensures prev < x &*&
     prev >= x - real_abs(x * d_eps);
     
+lemma void round_up_double_lemma(real x, real roundup);
+    requires roundup == round_up_double(x);
+    ensures roundup >= x;
+    
 lemma void round_up_min_dbl_lemma(real x);
     requires x <= min_dbl;
     ensures round_up_double(x) == min_dbl;
@@ -113,6 +128,10 @@ lemma void next_prev_double_lemma(real x, real nextprev);
 lemma void prev_next_double_lemma(real x, real prevnext);
     requires prevnext == prev_double(next_double(x));
     ensures prevnext <= x;
+    
+lemma void prev_double_zero_lemma(real x);
+    requires x > 0;
+    ensures prev_double(x) >= 0;
 
 fixpoint bool relative_error(real x, real approximation, real epsilon) {
     return x == 0 ? approximation == 0 : approximation <= x + real_abs(epsilon * x) && approximation >= x - real_abs(epsilon * x);
@@ -273,6 +292,22 @@ fixpoint fp_double double_mult(fp_double x, fp_double y){
 
 fixpoint bool exact_mult(fp_double x, fp_double y){
     return double_mult(x,y) != real_double(23);
+}
+
+fixpoint bool real_mult_gt(real a, real b, real c){
+    return a * b > c;
+}
+
+fixpoint bool bool_eq(bool a, bool b){
+    return a == b;
+}
+
+fixpoint bool real_mult_round_down(real rx, real ry, real rr){
+    return rx * ry < min_dbl || rr >= round_down_double(rx * ry);
+}
+
+fixpoint bool real_mult_round_up(real rx, real ry, real rr){
+    return rx * ry > max_dbl || rr <= round_up_double(rx * ry);
 }
 @*/
 
@@ -475,6 +510,7 @@ double vf__double_sub(double x, double y);
     //@ terminates;
 
 
+
 double vf__double_mul(double x, double y);
     /*@ requires
     	exact_mult(fp_of_double(x), fp_of_double(y)) ? 
@@ -483,18 +519,18 @@ double vf__double_mul(double x, double y);
     	fp_of_double(y) == real_double(?ry) &*& 
     	switch (fp_of_double(result)){
     	    case real_double(rr):
-    	        return rx * ry > max_dbl ||
-    	            rr <= round_up_double(rx * ry) &*&
-    	            rx * ry < min_dbl ||
-    	            rr >= round_down_double(rx * ry) &*&
+    	        return real_mult_round_up(rx,ry,rr) == true &*&
+    	            real_mult_round_down(rx,ry,rr) == true &*&
     	            relative_error(rx * ry, rr, double_eps) == true;
-    	    case pos_inf: return rx * ry > max_dbl;
+    	    case pos_inf: return real_mult_gt(rx, ry,max_dbl) == true;
     	    case neg_inf: return rx * ry < min_dbl;
     	    case NaN: return false;
     	};
     	@*/
     //@ ensures true;
     //@ terminates;
+ 
+
 
 
 double vf__double_div(double x, double y);

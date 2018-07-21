@@ -31,7 +31,27 @@ bool isnan(double x);
     //@ ensures result == (fp_of_double(x) == NaN);
     //@ terminates;
 
+
 /*@
+lemma void NONSENSE_LT_LEMMA(real a, real b);
+    requires true;
+    ensures a < b;
+
+lemma void real_mult_gt_lemma(real a, real b, real c)
+    requires real_mult_gt(a,b,c) == true;
+    ensures a * b > c;
+{}
+
+lemma void real_mult_round_down_lemma(real rx, real ry, real rr)
+    requires real_mult_round_down(rx,ry,rr) == true;
+    ensures rx * ry < min_dbl || rr >= round_down_double(rx * ry);
+{}
+    
+lemma void real_mult_round_up_lemma(real rx, real ry, real rr)
+    requires real_mult_round_up(rx,ry,rr) == true;
+    ensures rx * ry > max_dbl || rr <= round_up_double(rx * ry);
+{}
+
 fixpoint fp_double double_nextafter(fp_double x, fp_double y){
      switch (x) {
         case real_double(rx): 
@@ -137,24 +157,36 @@ lemma void leq_preservation_lemma2(real x, real y, real z);
     requires x <= y &*& z <= 0;
     ensures x * z >= y * z;
    
-    /* 
-lemma void multiplication_leq_substitution(real a,real b, real c,real d)
-    requires a <= c &*& b <= d &*& a * b > 0;
+lemma void mult_leq_substitution3(real a,real b, real c,real d);
+    requires a <= c &*& b >= d &*& c < 0 &*& b > 0;
     ensures a * b <= c * d;
-{
-    if (a < 0){
-        product_sign_lemma2(a,b);
-        assert b <= 0;
-        assert a <= c;
-        leq_preservation_lemma2(a,c,b);
-        assert a * b >= c * b;
-        
-        
-    } else {
-        assert b >= 0;
-    }
-}
-*/
+
+lemma void mult_leq_substitution(real a,real b, real c,real d);
+    requires a <= c &*& b <= d &*& a >= 0 &*& b >= 0;
+    ensures a * b <= c * d;
+
+
+lemma void mult_leq_substitution2(real a,real b, real c,real d);
+    requires a <= c &*& b <= d &*& c < 0 &*& d < 0;
+    ensures a * b >= c * d;
+
+
+
+lemma void neg_inf_mul_lemma(double a, double b, real ra, real rb)
+    requires fp_of_double(a) == real_double(ra) &*& 
+        fp_of_double(b) == real_double(rb) &*&
+        double_mult(fp_of_double(a),fp_of_double(b)) == neg_inf;
+    ensures ra * rb < min_dbl;
+{}
+
+lemma void pos_inf_mul_lemma(double a, double b, real ra, real rb)
+    requires fp_of_double(a) == real_double(ra) &*& 
+        fp_of_double(b) == real_double(rb) &*&
+        double_mult(fp_of_double(a),fp_of_double(b)) == pos_inf;
+    ensures ra * rb > max_dbl;
+{}
+    
+
     
 lemma void eq_preservation_lemma(real x, real y ,real z);
     requires x == y;
