@@ -124,9 +124,6 @@ fixpoint fp_double double_fmax(fp_double x, fp_double y){
     }
 }
 
-lemma void real_of_double_lemma(double x);
-    requires real_of_double(x) == some(?rx);
-    ensures ! is_pos_infinity(x) &*& ! is_neg_infinity(x);
 
 
 lemma void leq_substitution_lemma(real x, real y, real z);

@@ -57,7 +57,7 @@ lemma void real_div_lemma2(real x, real y, real result);
     ensures real_div(x,y) == result;
 
 lemma void division_lemma(real num, real small, real big);
-    requires small <= big &*& num >=0 &*& small > 0 &*& big > 0;
+    requires small <= big &*& num >=0 &*& small > 0;
     ensures real_div(num,small) >= real_div(num,big);
     
 lemma void real_div_sum_lemma(real a, real b, real c);

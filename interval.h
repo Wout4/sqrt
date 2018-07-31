@@ -42,7 +42,7 @@ lemma void neg_inf_interval_lemma(struct interval *x, real x1)
 fixpoint bool leq_double_real(fp_double a, real x){
     switch (a) {
     	case real_double(ra): return ra <= x;
-    	case pos_inf: return x > max_dbl / min_pos_dbl;
+    	case pos_inf: return false;//x > max_dbl / min_pos_dbl;
     	case neg_inf: return true;
     	case NaN: return false;
     }
@@ -52,7 +52,7 @@ fixpoint bool leq_real_double(real x, fp_double b){
     switch (b) {
     	case real_double(rb): return x <= rb;
     	case pos_inf: return true;
-    	case neg_inf: return x < min_dbl / min_pos_dbl;
+    	case neg_inf: return false;//x < min_dbl / min_pos_dbl;
     	case NaN: return false;
     }
 }
@@ -86,83 +86,348 @@ lemma void between_lemma(fp_double a, real x, fp_double b)
     requires leq_double_real(a,x) == true &*& leq_real_double(x,b) == true;
     ensures between(a,b,x) == true;
 {}
-    
-  /*  
-lemma void lower_bound_lemma(double ra, double sa, double fa, double l, real x1, real x2)
-    requires (fp_of_double(l) == pos_inf ? real_mult_gt(rfa,rsa,max_dbl) == true : true);
-    ensures leq_double_real(fp_of_double(ra), x1 * x2) == true;
-    
-{
-        switch (fp_of_double(fa)){
-        case real_double(rfa):
-            switch (fp_of_double(sa)){
-                case real_double(rsa):
-                    if (fp_of_double(l) == pos_inf){
-                        assert real_mult_gt(rfa,rsa,max_dbl) == true;
-                        real_mult_gt_lemma(rfa,rsa,max_dbl);
-                        assert rfa * rsa > max_dbl;
-                        assert x1 >= rfa;
-                        assert x2 >= rsa;
-                        assert rfa >= 0;
-                        assert rsa >= 0;
-                        assert x1 * x2 >= rfa * rsa;
-                        leq_transitivity_lemma(max_dbl,rfa * rsa, x1 * x2);
-                        assert x1 * x2 >= max_dbl;
-                        assert fp_of_double(ra) == real_double(?rra);
-                        assert fp_of_double(ra) == double_nextafter(fp_of_double(l),neg_inf);
-                        assert rra == max_dbl;
-                    } else {
-                        assert fp_of_double(l) == real_double(?rl);
-                        assert fp_of_double(ra) == real_double(?rra);
-                        if (rra == 0){
-                            assert x1 >= 0;
-                            assert x2 >= 0;
-                            assert x1 * x2 >= 0;
-                            assert leq_double_real(fp_of_double(ra), x1 * x2) == true;
-                        } else {
-                            assert rra = prev_double(rl);
-                            assert rl <= next_double(rfa * rsa);
-                            prev_double_transitivity_lemma(rl,next_double(rfa * rsa));
-                            prev_next_double_lemma(rfa * rsa, prev_double(next_double(rfa * rsa)));
-                        }
-                        
-                    }
-                case pos_inf:
-                    if (rfa == 0){
-                        assert fp_of_double(l) == real_double(?rl);
-                        assert fp_of_double(ra) == real_double(?rra);
-                        assert rl == 0;
-                        assert rra == 0;
-                    } else {
-                        min_pos_double_lemma(fa);
-                    }
-                case neg_inf: assert false;
-                case NaN: assert false;
-            }
-        case pos_inf:
-            switch (fp_of_double(sa)){
-                case real_double(rsa):
-                    if (rsa == 0){
-                    
-                    } else {
-                    
-                        min_pos_double_lemma(sa);
-                    }
-                case pos_inf:
-                    assert fp_of_double(ra) == real_double(?rra);
-                    assert rra == max_dbl;
-                    assert x1 >= max_dbl / min_pos_dbl;
-                    assert x2 >= max_dbl / min_pos_dbl;
-                    assert x1 * x2 >= max_dbl;
-                case neg_inf: assert false;
-                case NaN: assert false;
-            }
-        case neg_inf: assert false;
-        case NaN: assert false;
-    
-    }
-*/
 @*/
+
+
+struct interval *double_add(struct interval *first, struct interval *second)
+    /*@ requires interval_pred(first,?x1) &*&
+    	interval_pred(second,?x2);@*/
+    /*@ ensures interval_pred(first,x1) &*&
+        interval_pred(second,x2) &*&
+        interval_pred(result,x1 + x2) &*&
+    	malloc_block_interval(result); @*/
+{
+    //@ open interval_pred(first, x1);
+    //@ open interval_pred(second, x2);
+    //@ assert first->a |-> ?fa;
+    //@ assert second->a |-> ?sa;
+    //@ assert first->b |-> ?fb;
+    //@ assert second->b |-> ?sb;
+    struct interval *result = malloc(sizeof(struct interval));
+    if (result == 0) { abort(); }
+    if ((first->a == -INFINITY && second->a == INFINITY) || 
+    	(first->a == INFINITY && second->a == -INFINITY)){
+    	result->a = -INFINITY;
+    	//@ assert result->a |-> ?ra;
+    	//@ assert fp_of_double(ra) == neg_inf;
+    	//@ assert leq_double_real(fp_of_double(ra), x1 + x2) == true;
+     } else {
+    	double l = first->a + second->a;
+    	result->a = nextafter(l,-INFINITY);
+    	//@ assert result->a |-> ?ra;
+    	/*@
+    	if (is_real_double(fa) == true) {
+    	    assert fp_of_double(fa) == real_double(?rfa);
+    	    if (is_real_double(sa) == true) {
+    	        assert fp_of_double(sa) == real_double(?rsa);
+    	        if (is_real_double(l)) {
+    	            assert fp_of_double(l) == real_double(?rl);
+    	    	    assert rl <= round_up_double(rfa + rsa) || rfa + rsa > max_dbl;
+    	    	    if (is_real_double(ra)) {
+    	    	        if (rl <= round_up_double(rfa + rsa)){
+    	    	            assert fp_of_double(ra) == real_double(?rra);
+    	    	            assert rra == prev_double(rl);
+    	    	            prev_double_transitivity_lemma(rl,round_up_double(rfa + rsa));
+    	    	            assert rra <= prev_double(round_up_double(rfa + rsa));
+    	    	            prev_round_up_lemma(rfa + rsa, prev_double(round_up_double(rfa + rsa)));
+    	    	            assert leq_double_real(fp_of_double(ra), x1 + x2) == true;
+    	    	        } else {
+    	    	            assert rfa + rsa > max_dbl;
+    	    	            assert fp_of_double(ra) == real_double(?rra);
+    	    	            assert rl >= round_down_double(rfa + rsa);
+    	    	            round_down_max_dbl_lemma(rfa + rsa);
+    	    	            assert rl >= max_dbl;
+    	    	            real_double_lemma(l);
+    	    	            assert rl == max_dbl;
+    	    	            assert rra == prev_double(rl);
+    	    	            prev_double_lemma(rl, rra);
+    	    	            assert leq_double_real(fp_of_double(ra), x1 + x2) == true;
+    	    	        }
+    	    	    }
+    	    	    assert x1 + x2 >= rfa + rsa;
+    	    	} else {}
+    	    	assert leq_double_real(fp_of_double(ra), x1 + x2) == true;
+    	    } else if (fp_of_double(sa) == pos_inf){
+    		real_double_lemma(fa);
+    	    } else if (fp_of_double(sa) == neg_inf){
+    	    } else {}
+    	} else if (fp_of_double(fa) == pos_inf){
+    	    if (is_real_double(sa) == true) {
+    	        assert fp_of_double(sa) == real_double(?rsa);
+    	    	real_double_lemma(sa);
+    	    } else if (fp_of_double(sa) == pos_inf){
+    	    } else if (fp_of_double(sa) == neg_inf){
+    	    } else {}
+    	} else if (fp_of_double(fa) == neg_inf){
+    	    if (is_real_double(sa) == true) {
+    	    	assert fp_of_double(sa) == real_double(?rsa);
+    	        assert fp_of_double(l) == neg_inf; //wordt niet bewezen zonder lijn hierboven.
+    	        // zonder deze asserts geen succesvolle verificatie.
+    	    } else if (fp_of_double(sa) == pos_inf){
+    	    } else if (fp_of_double(sa) == neg_inf){
+    	    } else {}
+    	} else {}
+    	@*/
+   	//@ assert leq_double_real(fp_of_double(ra), x1 + x2) == true;
+    }
+    if ((first->b == -INFINITY && second->b == INFINITY) ||
+    	(first->b == INFINITY && second->b == -INFINITY)){
+    	result->b = INFINITY;
+    	//@ assert result->b |-> ?rb;
+    	//@ assert fp_of_double(rb) == pos_inf;
+    	//@ assert leq_real_double(x1 + x2, fp_of_double(rb)) == true;
+     } else {
+    	double u = first->b + second->b;
+    	result->b = nextafter(u,INFINITY);
+    	//@ assert result->b |-> ?rb;
+    	/*@
+    	if (is_real_double(fb) == true) {
+    	    assert fp_of_double(fb) == real_double(?rfb);
+    	    real_double_lemma(fb);
+    	    if (is_real_double(sb) == true) {
+    	    	assert fp_of_double(sb) == real_double(?rsb);
+    	    	if (!is_real_double(u)) {
+    	    	} else {
+    	    	    assert fp_of_double(u) == real_double(?ru);
+    	    	    assert x1 <= rfb;
+    	    	    assert x2 <= rsb;
+    	    	    assert x1 + x2 <= rfb + rsb;
+    	    	    assert ru >= round_down_double(rfb + rsb) || rfb + rsb < min_dbl;
+    	    	    if (is_real_double(rb)) {
+    	    	        if (ru >= round_down_double(rfb + rsb)) {
+    	    	        
+    	    	            assert fp_of_double(rb) == real_double(?rrb);
+    	    	            assert rrb == next_double(ru);
+    	    	            next_double_transitivity_lemma(round_down_double(rfb + rsb), ru);
+    	    	            assert next_double(ru) >= next_double(round_down_double(rfb + rsb));
+    	    	            assert rrb == next_double(ru);
+    	    	            leq_transitivity_lemma(next_double(round_down_double(rfb + rsb)), next_double(ru), rrb);
+    	    	            assert rrb  >= next_double(round_down_double(rfb + rsb));
+    	    	            next_round_down_lemma(rfb + rsb, next_double(round_down_double(rfb + rsb)));
+    	    	            assert x1 + x2 <= rrb;
+    	    	            assert leq_real_double(x1 + x2, fp_of_double(rb)) == true;
+    	    	        } else { 
+    	    	            assert rfb + rsb < min_dbl;
+    	    	            assert rfb + rsb >= min_dbl / md_eps;
+    	    	            assert fp_of_double(rb) == real_double(?rrb);
+    	    	            assert ru <= round_up_double(rfb + rsb);
+    	    	            round_up_min_dbl_lemma(rfb + rsb);
+    	    	            assert ru <= min_dbl;
+    	    	            real_double_lemma(u);
+    	    	            assert ru == min_dbl;
+    	    	            assert rrb == next_double(ru);
+    	    	            next_double_lemma(ru, rrb);
+    	    	            assert x1 + x2 <= rrb;
+    	    	            assert leq_real_double(x1 + x2, fp_of_double(rb)) == true;
+    	    	        }
+    	    	    } else {
+    	    	        assert fp_of_double(rb) == pos_inf;
+    	    	        assert leq_real_double(x1 + x2, fp_of_double(rb)) == true;
+    	    	    }
+    	    	    assert x1 + x2 <= rfb + rsb;
+    	    	    assert leq_real_double(x1 + x2, fp_of_double(rb)) == true;
+    	    	}
+    	    } else if (fp_of_double(sb) == pos_inf){
+    	    } else if (fp_of_double(sb) == neg_inf){
+    	    } else {}
+    	} else if (fp_of_double(fb) == pos_inf){
+    	    if (is_real_double(sb) == true) {
+    	        assert fp_of_double(sb) == real_double(?rsb);
+    	    } else if (fp_of_double(sb) == pos_inf){
+    	    } else if (fp_of_double(sb) == neg_inf){
+    	    } else {}
+    	} else if (fp_of_double(fb) == neg_inf){
+    	    if (is_real_double(sb) == true) {
+    	        assert fp_of_double(sb) == real_double(?rsb);
+    	        assert x2 <= rsb;
+    	        real_double_lemma(sb);
+    	        assert rsb >= min_dbl;
+    	        assert rsb <= max_dbl;
+    	        assert min_dbl + max_dbl == 0;
+    	        assert fp_of_double(u) == neg_inf;
+    	        assert fp_of_double(rb) == real_double(min_dbl);
+    	        assert leq_real_double(x1 + x2, fp_of_double(rb)) == true;   
+    	    } else if (fp_of_double(sb) == pos_inf){
+    	    } else if (fp_of_double(sb) == neg_inf){   	
+    	    } else {}
+    	} else {
+    	}
+    	@*/
+    	
+    	//@ assert leq_real_double(x1 + x2, fp_of_double(rb)) == true;
+    }
+
+    return result;
+    //between(fp_of_double(a),fp_of_double(b),x) == true;
+    //@ close(interval_pred(result,x1 + x2));
+    //@ close(interval_pred(first,x1));
+    //@ close(interval_pred(second,x2));
+}
+
+struct interval *double_sub(struct interval *first, struct interval *second)
+    /*@ requires interval_pred(first,?x1) &*&
+    	interval_pred(second,?x2); @*/
+    /*@ ensures interval_pred(first,x1) &*&
+    	interval_pred(second,x2) &*&
+    	interval_pred(result,x1 - x2) &*&
+    	malloc_block_interval(result); @*/
+{
+    //@ open interval_pred(first, x1);
+    //@ open interval_pred(second, x2);
+    //@ assert first->a |-> ?fa;
+    //@ assert second->a |-> ?sa;
+    //@ assert first->b |-> ?fb;
+    //@ assert second->b |-> ?sb;
+    struct interval *result = malloc(sizeof(struct interval));
+    if (result == 0) { abort(); }
+    
+    if ((first->a == INFINITY && second->b == INFINITY) ||
+    	(first->a == -INFINITY && second->b == -INFINITY)){
+    	result->a = -INFINITY;
+    } else {
+    	double l = first->a - second->b;
+    	result->a = nextafter(l,-INFINITY);
+    	//@ assert result->a |-> ?ra;
+    	/*@
+    	if (is_real_double(fa) == true) {
+    	    assert fp_of_double(fa) == real_double(?rfa);
+    	    if (is_real_double(sb) == true) {
+    	        assert fp_of_double(sb) == real_double(?rsb);
+    	        if (is_real_double(l)) {
+    	            assert fp_of_double(l) == real_double(?rl);
+    	    	    assert rl <= round_up_double(rfa - rsb) || rfa - rsb > max_dbl;
+    	    	    if (is_real_double(ra)) {
+    	    	        if (rl <= round_up_double(rfa - rsb)){
+    	    	            assert fp_of_double(ra) == real_double(?rra);
+    	    	            assert rra == prev_double(rl);
+    	    	            prev_double_transitivity_lemma(rl,round_up_double(rfa - rsb));
+    	    	            assert rra <= prev_double(round_up_double(rfa - rsb));
+    	    	            prev_round_up_lemma(rfa - rsb, prev_double(round_up_double(rfa - rsb)));
+    	    	            assert leq_double_real(fp_of_double(ra), x1 - x2) == true;
+    	    	        } else {
+    	    	            assert rfa - rsb > max_dbl;
+    	    	            assert fp_of_double(ra) == real_double(?rra);
+    	    	            assert rl >= round_down_double(rfa - rsb);
+    	    	            round_down_max_dbl_lemma(rfa - rsb);
+    	    	            assert rl >= max_dbl;
+    	    	            real_double_lemma(l);
+    	    	            assert rl == max_dbl;
+    	    	            assert rra == prev_double(rl);
+    	    	            prev_double_lemma(rl, rra);
+    	    	            assert leq_double_real(fp_of_double(ra), x1 - x2) == true;
+    	    	        }
+    	    	    }
+    	    	} else {}
+    	        
+    	    } else if (fp_of_double(sb) == pos_inf){
+    	    	
+    	    } else if (fp_of_double(sb) == neg_inf){
+    		real_double_lemma(fa);
+    	    } else {
+    	
+    	    }
+    	} else if (fp_of_double(fa) == pos_inf){
+    	    if (is_real_double(sb) == true) {
+    	    	real_double_lemma(sb);
+
+    	    } else if (fp_of_double(sb) == pos_inf){
+    	
+    	    } else if (fp_of_double(sb) == neg_inf){
+    	
+    	    } else {
+    	
+    	    }
+    	} else if (fp_of_double(fa) == neg_inf){
+    	    if (is_real_double(sb) == true) {
+    	        real_double_lemma(sb);
+    	    } else if (fp_of_double(sb) == pos_inf){
+    	
+    	    } else if (fp_of_double(sb) == neg_inf){
+    	
+    	    } else {
+    	
+    	    }
+    	} else {
+
+    	}
+    	@*/
+        //@ assert leq_double_real(fp_of_double(ra), x1 - x2) == true;
+    }
+    if ((first->b == INFINITY && second->a == INFINITY) ||
+    	(first->b == -INFINITY && second->a == -INFINITY)){
+    	result->b = INFINITY;
+    } else {
+    	double u = first->b - second->a;
+    	result->b = nextafter(u,INFINITY);
+    	//@ assert result->b |-> ?rb;
+    	/*@
+    	if (is_real_double(fb) == true) {
+    	    assert fp_of_double(fb) == real_double(?rfb);
+    	    real_double_lemma(fb);
+    	    if (is_real_double(sa) == true) {
+    	    	assert fp_of_double(sa) == real_double(?rsa);
+    	    	if (is_real_double(u)) {
+    	    	    assert fp_of_double(u) == real_double(?ru);
+    	    	    assert ru >= round_down_double(rfb - rsa) || rfb - rsa < min_dbl;
+    	    	    if (is_real_double(rb)) {
+    	    	    	if (ru >= round_down_double(rfb - rsa)) {
+    	    	            assert fp_of_double(rb) == real_double(?rrb);
+    	    	            assert rrb == next_double(ru);
+    	    	            next_double_transitivity_lemma(round_down_double(rfb - rsa), ru);
+    	    	            assert next_double(ru) >= next_double(round_down_double(rfb - rsa));
+    	    	            assert rrb == next_double(ru);
+    	    	            leq_transitivity_lemma(next_double(round_down_double(rfb - rsa)), next_double(ru), rrb);
+    	    	            assert rrb  >= next_double(round_down_double(rfb - rsa));
+    	    	            next_round_down_lemma(rfb - rsa, next_double(round_down_double(rfb - rsa)));
+    	    	            assert x1 - x2 <= rrb;
+    	    	            assert leq_real_double(x1 - x2, fp_of_double(rb)) == true;
+    	    	        } else { 
+    	    	            assert rfb - rsa < min_dbl;
+    	    	            assert rfb - rsa >= min_dbl / md_eps;
+    	    	            assert fp_of_double(rb) == real_double(?rrb);
+    	    	            assert ru <= round_up_double(rfb  - rsa);
+    	    	            round_up_min_dbl_lemma(rfb - rsa);
+    	    	            assert ru <= min_dbl;
+    	    	            real_double_lemma(u);
+    	    	            assert ru == min_dbl;
+    	    	            assert rrb == next_double(ru);
+    	    	            next_double_lemma(ru, rrb);
+    	    	            assert leq_real_double(x1 - x2, fp_of_double(rb)) == true;
+    	    	        }
+    	    	        assert leq_real_double(x1 - x2, fp_of_double(rb)) == true;
+    	    	    } else {
+    	    	    
+    	    	    }
+    	    	} else {
+    	    	
+    	    	}
+    	    	assert leq_real_double(x1 - x2, fp_of_double(rb)) == true;
+    	    } else if (fp_of_double(sa) == pos_inf){
+    	    } else if (fp_of_double(sa) == neg_inf){
+    	    } else {}
+    	} else if (fp_of_double(fb) == pos_inf){
+    	    if (is_real_double(sa) == true) {
+    	    	real_double_lemma(sa);
+    	    } else if (fp_of_double(sa) == pos_inf){
+    	    } else if (fp_of_double(sa) == neg_inf){
+    	    } else {}
+    	} else if (fp_of_double(fb) == neg_inf){
+    	    if (is_real_double(sa) == true) { 
+    	    	real_double_lemma(sa);
+    	    } else if (fp_of_double(sa) == pos_inf){
+    	    } else if (fp_of_double(sa) == neg_inf){   	
+    	    } else {}
+    	} else {
+    	}
+
+    	@*/
+    	//@ assert leq_real_double(x1 - x2, fp_of_double(rb)) == true;
+    }
+    //@ close(interval_pred(result,x1 - x2));
+    //@ close(interval_pred(first,x1));
+    //@ close(interval_pred(second,x2));
+    return result;
+}
 
 
 
@@ -209,6 +474,7 @@ struct interval *double_mult(struct interval *first, struct interval *second)
                         assert x2 >= rsa;
                         assert rfa >= 0;
                         assert rsa >= 0;
+                        mult_leq_substitution(rfa,rsa,x1,x2);
                         assert x1 * x2 >= rfa * rsa;
                         leq_transitivity_lemma(max_dbl,rfa * rsa, x1 * x2);
                         assert x1 * x2 >= max_dbl;
@@ -274,9 +540,7 @@ struct interval *double_mult(struct interval *first, struct interval *second)
             switch (fp_of_double(sa)){
                 case real_double(rsa):
                     if (rsa == 0){
-                    
                     } else {
-                    
                         min_pos_double_lemma(sa);
                     }
                 case pos_inf:
@@ -311,9 +575,10 @@ struct interval *double_mult(struct interval *first, struct interval *second)
                     if (fp_of_double(u) == pos_inf){
                         assert real_mult_gt(rfb,rsb,max_dbl) == true;
                         real_mult_gt_lemma(rfb,rsb,max_dbl);
-                       
                         assert rfb * rsb > max_dbl;
                     } else {
+                        assert rfb >= 0;
+                        assert rsb >= 0;
                         assert fp_of_double(u) == real_double(?ru);
                         assert x1 <= rfb;
                         assert x2 <= rsb;
@@ -336,13 +601,28 @@ struct interval *double_mult(struct interval *first, struct interval *second)
                             assert rrb >= rfb * rsb;
                         }
                     }
-                case pos_inf:
+                case pos_inf: 
+                    assert fp_of_double(u) == pos_inf || fp_of_double(rb) == real_double(0);
+                    assert fp_of_double(rb) == pos_inf || fp_of_double(rb) == real_double(0);
+                    if (fp_of_double(rb) == real_double(0)){
+                        assert x1 == 0;
+                        strict_product_sign_lemma(x1,x2);
+                        assert x1 * x2 == 0;
+                    } else {}
+                    assert leq_real_double(x1 * x2, fp_of_double(rb)) == true;
                 case neg_inf: assert false;
                 case NaN: assert false;
             }
         case pos_inf:
             switch (fp_of_double(sb)){
                 case real_double(rsb):
+                    assert fp_of_double(rb) == pos_inf || fp_of_double(rb) == real_double(0);
+                    if (fp_of_double(rb) == real_double(0)){
+                        assert x2 == 0;
+                        strict_product_sign_lemma(x1,x2);
+                        assert x1 * x2 == 0;
+                    } else {}
+                    assert leq_real_double(x1 * x2, fp_of_double(rb)) == true;
                 case pos_inf:
                     assert leq_double_real(fp_of_double(ra), x1 * x2) == true;
                 case neg_inf: assert false;
@@ -407,7 +687,9 @@ struct interval *double_mult(struct interval *first, struct interval *second)
                                 prev_round_up_lemma(rfa * rsa, prev_double(round_up_double(rfa * rsa)));
                                 assert rra <= rfa * rsa;
                                 assert rfa * rsa > 0;
+                                mult_leq_substitution(rfa,rsa,x1,x2);
                                 assert x1 * x2 >= rfa * rsa;
+                                leq_transitivity_lemma(rra,rfa*rsa,x1*x2);
                                 assert x1 * x2 >= rra;
                                 assert rra <= x1 * x2;
 				assert leq_double_real(fp_of_double(ra), x1 * x2) == true;
@@ -472,6 +754,14 @@ struct interval *double_mult(struct interval *first, struct interval *second)
     //@ close(pos_interval_pred(first,x1));
     //@ close(pos_interval_pred(second,x2));
     return result;
+}
+
+
+double lame()
+    //@ requires true;
+    //@ ensures false;
+{
+    return 1.0;
 }
 
 /*

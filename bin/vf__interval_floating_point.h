@@ -33,11 +33,11 @@ lemma void real_double_lemma(double x);
 lemma void min_pos_double_lemma(double x);
     requires fp_of_double(x) == real_double(?rx) &*& rx > 0;
     ensures rx >= min_pos_dbl;
-    
+/*    
 lemma void max_neg_double_lemma(double x);
     requires fp_of_double(x) == real_double(?rx) &*& rx < 0;
     ensures rx <= 0-min_pos_dbl;
-
+*/
 
 fixpoint real real_div(real x, real y);
 fixpoint real real_abs(real x) {return x < 0 ? -x : x; }
@@ -75,8 +75,8 @@ fixpoint bool is_real_double(double x){
     return !(fp_of_double(x) == pos_inf || fp_of_double(x) == neg_inf || fp_of_double(x) == NaN);
 }
 
-fixpoint bool is_pos_infinity(double x);
-fixpoint bool is_neg_infinity(double x);
+//fixpoint bool is_pos_infinity(double x);
+//fixpoint bool is_neg_infinity(double x);
 
 fixpoint real next_double(real x);
 fixpoint real prev_double(real x);
@@ -86,12 +86,12 @@ fixpoint real round_down_double(real x);
 lemma void next_double_lemma(real x, real next);
     requires next == next_double(x);
     ensures next > x &*&
-    next <= x + real_abs(x * d_eps);
+    	next <= x + real_abs(x * d_eps);
     
 lemma void prev_double_lemma(real x, real prev);
     requires prev == prev_double(x);
     ensures prev < x &*&
-    prev >= x - real_abs(x * d_eps);
+    	prev >= x - real_abs(x * d_eps);
     
 lemma void round_up_double_lemma(real x, real roundup);
     requires roundup == round_up_double(x);
@@ -466,11 +466,8 @@ double vf__double_add(double x, double y);
     /*@ requires 
     	exact_add(fp_of_double(x), fp_of_double(y)) ? 
     	    ensures fp_of_double(result) == double_add(fp_of_double(x), fp_of_double(y)):
-    	    
         ensures fp_of_double(x) == real_double(?rx) &*&
         fp_of_double(y) == real_double(?ry) &*&
-        //rx + ry >  && rx + ry < max_dbl * (1 + d_eps)? fp_of_double(result) == pos_inf || fp_of_double(result) == real_double(max_dbl):  // (rx + ry - max_dbl) / rx + ry <= d_eps <=> rx + ry - max_dbl <= d_eps(rx + ry) <=> (1 - d_eps)*(rx + ry) <= max_dbl
-        //rx + ry < min_dbl * (1 + d_eps) ? fp_of_double(result) == neg_inf:
         switch (fp_of_double(result)) {
             case real_double(rr): return rx + ry > max_dbl ||
         				rr <= round_up_double(rx + ry) &*& 
@@ -481,10 +478,8 @@ double vf__double_add(double x, double y);
     	    case neg_inf: return rx + ry < min_dbl;
     	    case NaN: return false;
     	};
-    	
     @*/
-    /*@ ensures true;
-    @*/
+    //@ ensures true;
     //@ terminates;
 
 
@@ -547,50 +542,14 @@ double vf__double_div(double x, double y);
                     rr >= round_down_double(real_div(rx,ry)) &*&
                     relative_error(real_div(rx,ry), rr, double_eps) == true;
             case pos_inf: return real_div(rx,ry) > max_dbl;
-            case neg_inf: return real_div(rx,ry) < max_dbl;
+            case neg_inf: return real_div(rx,ry) < min_dbl;
             case NaN: return false;
        	};
     @*/
-    /*@ ensures 
-    	fp_of_double(result) == double_div(fp_of_double(x), fp_of_double(y));
-    @*/
+    //@ ensures true; //fp_of_double(result) == double_div(fp_of_double(x), fp_of_double(y));
     //@ terminates;
 
-/*
-double vf__double_div(double x, double y);
-    /*@ requires 
-    	fp_of_double(x) == real_double(?rx) && rx == 0 && 
-    	fp_of_double(y) == real_double(?ry) && ry == 0 ? 
-    	    ensures fp_of_double(result) == NaN:
-    	fp_of_double(x) != real_of_double(?rx) && fp_of_double(y) != real_of_double(?ry) ?
-    	    ensures fp_of_double(result) == NaN:
-    	fp_of_double(y) == neg_inf || fp_of_double(y) == pos_inf ?
-    	    ensures fp_of_double(result) == real_double(0):
-    	fp_of_double(x) == neg_inf && fp_of_double(y) == real_of_double(ry) && ry >= 0?
-    	    ensures fp_of_double(result) == neg_inf:
-    	fp_of_double(x) == neg_inf && fp_of_double(y) == real_of_double(ry) && ry < 0?
-    	    ensures fp_of_double(result) == pos_inf:
-    	fp_of_double(x) == pos_inf && fp_of_double(y) == real_of_double(ry) && ry >= 0?
-    	    ensures fp_of_double(result) == pos_inf:
-    	fp_of_double(x) == pos_inf && fp_of_double(y) == real_of_double(ry) && ry < 0?
-    	    ensures fp_of_double(result) == neg_inf:
-    	fp_of_double(x) == real_of_double(rx) && rx > 0 && 
-    	fp_of_double(y) == real_of_double(ry) && ry == 0 ?    
-     	    ensures fp_of_double(result) == pos_inf: 
-    	fp_of_double(x) == real_of_double(rx) && rx < 0 && 
-    	fp_of_double(y) == real_of_double(ry) && ry == 0 ?    
-     	    ensures fp_of_double(result) == pos_inf:     
-    	    
-    	ensures fp_of_double(x) == real_double(rx) &*& 
-	fp_of_double(y) == real_double(ry) &*& 
-	fp_of_double(result) == real_double(rr) &*&
-        rr <= round_up_double(real_div(rx,ry)) &*&
-        rr >= round_down_double(real_div(rx,ry)) &*&
-        relative_error(real_div(rx,ry), rr, double_eps) == true; 
-    @*/ 
- /*   //@ ensures true;
-    //@ terminates;
-    */
+
 long double vf__long_double_div(long double x, long double y);
     //@ requires real_of_long_double(x) == some(?rx) &*& real_of_long_double(y) == some(?ry);
     //@ ensures real_of_long_double(result) == some(?rr) &*& relative_error(real_div(rx,ry), rr, long_double_eps) == true;
