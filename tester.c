@@ -1,4 +1,4 @@
-#include <math.h>
+#include <exact_math.h>
 
 /* 
 double test(double x, double y)
@@ -100,28 +100,25 @@ double neutral_element_test(double x)
     	return x + 0.0;
     }
     
-   
+  */ 
 double loop_test(double x)
     //@requires real_of_double(x) == some(?rx);
     //@ensures real_of_double(result) == some(?rr) &*& rr == 5;
     //@terminates;
+{
+    int i = 0;
+    double result = 5.0;
+    while (i < 7)
+    //@ invariant real_of_double(result) == some(?rr) &*& rr == 5;
+    //@ decreases 10-i;
     {
-    	int i = 0;
-    	double result = 5.0;
-    	while (i < 7)
-    	//@ invariant real_of_double(result) == some(?rr) &*& rr == 5 &*& i <= 9;
-        //@ decreases 10-i;
-        {
-            i = i + 1;
-            if (i >= 7) {
-            	break;
-            }
-            result = result + 0.0;
-        }
-        return result;
+        i = i + 1;
+        result = result + 0.0;
     }
+    return result;
+}
     
-*/
+/*
 double division_test(double x, double y)
     //@ requires real_of_double(x) == some(?rx) &*& rx > 0;
     //@ ensures true;
@@ -246,6 +243,7 @@ double my_sqrt(double x)
 }
 
     */
+    /*
 double my_sqrt(double x)
     //@ requires real_of_double(x) == some(?rx) &*& 0 <= rx;
     //@ ensures true;
@@ -281,5 +279,5 @@ double my_sqrt(double x)
     }
     return 0;
 }
-    
+   */ 
     
