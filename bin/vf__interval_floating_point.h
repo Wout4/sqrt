@@ -64,32 +64,30 @@ fixpoint bool is_real_double(double x){
     return !(fp_of_double(x) == pos_inf || fp_of_double(x) == neg_inf || fp_of_double(x) == NaN);
 }
 
-//fixpoint bool is_pos_infinity(double x);
-//fixpoint bool is_neg_infinity(double x);
-
 fixpoint real next_double(real x);
 fixpoint real prev_double(real x);
 fixpoint real round_up_double(real x);
 fixpoint real round_down_double(real x);
 
+
 lemma void next_double_lemma(real x, real next);
     requires next == next_double(x);
     ensures next > x &*&
     	next <= x + real_abs(x * d_eps);
-    
+  
 lemma void prev_double_lemma(real x, real prev);
     requires prev == prev_double(x);
     ensures prev < x &*&
     	prev >= x - real_abs(x * d_eps);
-    
+/*    
 lemma void round_up_double_lemma(real x, real roundup);
     requires roundup == round_up_double(x);
     ensures roundup >= x;
-    
+  */
 lemma void round_up_min_dbl_lemma(real x);
     requires x <= min_dbl;
     ensures round_up_double(x) == min_dbl;
-   
+ 
 lemma void round_down_max_dbl_lemma(real x);
     requires x >= max_dbl;
     ensures round_down_double(x) == max_dbl;     
@@ -101,7 +99,7 @@ lemma void next_double_transitivity_lemma(real a, real b);
 lemma void prev_double_transitivity_lemma(real a, real b);
     requires a <= b;
     ensures prev_double(a) <= prev_double(b);
-    
+   
 lemma void next_round_down_lemma(real x, real next_round_down);
     requires next_round_down == next_double(round_down_double(x));
     ensures next_round_down >= x;

@@ -140,15 +140,10 @@ struct interval *double_add(struct interval *first, struct interval *second)
     	    	assert x1 + x2 >= rfa + rsa;
     	    } else {}
     	    assert leq_double_real(fp_of_double(ra), x1 + x2) == true;
-    	} else if (fp_of_double(sa) == pos_inf){
-    	} else if (fp_of_double(sa) == neg_inf){
         } else {}
-    } else if (fp_of_double(fa) == pos_inf){
     } else if (fp_of_double(fa) == neg_inf){
         if (is_real_double(sa) == true) {
             assert fp_of_double(sa) == real_double(?rsa); // zonder deze assert geen succesvolle verificatie.
-    	} else if (fp_of_double(sa) == pos_inf){
-    	} else if (fp_of_double(sa) == neg_inf){
     	} else {}
     } else {}
     @*/
@@ -202,16 +197,11 @@ struct interval *double_add(struct interval *first, struct interval *second)
     	    	assert x1 + x2 <= rfb + rsb;
     	    	assert leq_real_double(x1 + x2, fp_of_double(rb)) == true;
     	    }
-    	} else if (fp_of_double(sb) == pos_inf){
-    	} else if (fp_of_double(sb) == neg_inf){
         } else {}
     } else if (fp_of_double(fb) == pos_inf){
         if (is_real_double(sb) == true) {
-            assert fp_of_double(sb) == real_double(?rsb);
-        } else if (fp_of_double(sb) == pos_inf){
-        } else if (fp_of_double(sb) == neg_inf){
+            assert fp_of_double(sb) == real_double(?rsb); //Nodig voor verificatie
         } else {}
-    } else if (fp_of_double(fb) == neg_inf){
     } else {}
     @*/
     //@ assert leq_real_double(x1 + x2, fp_of_double(rb)) == true;
@@ -270,15 +260,10 @@ struct interval *double_sub(struct interval *first, struct interval *second)
     	    	    }
     	    	}
     	    } else {}    
-    	} else if (fp_of_double(sb) == pos_inf){   	
-    	} else if (fp_of_double(sb) == neg_inf){
     	} else {}
-    } else if (fp_of_double(fa) == pos_inf){
     } else if (fp_of_double(fa) == neg_inf){
         if (is_real_double(sb) == true) {
             real_double_lemma(sb);
-        } else if (fp_of_double(sb) == pos_inf){
-        } else if (fp_of_double(sb) == neg_inf){
         } else {}
     } else {}
     @*/
@@ -324,14 +309,10 @@ struct interval *double_sub(struct interval *first, struct interval *second)
     	    	} else {}
     	    } else {}
     	    assert leq_real_double(x1 - x2, fp_of_double(rb)) == true;
-    	} else if (fp_of_double(sa) == pos_inf){
-    	} else if (fp_of_double(sa) == neg_inf){
     	} else {}
     } else if (fp_of_double(fb) == pos_inf){
         if (is_real_double(sa) == true) {
             real_double_lemma(sa);
-    	} else if (fp_of_double(sa) == pos_inf){
-    	} else if (fp_of_double(sa) == neg_inf){
     	} else {}
     } else if (fp_of_double(fb) == neg_inf){
     } else {}
@@ -343,7 +324,12 @@ struct interval *double_sub(struct interval *first, struct interval *second)
     return result;
 }
 
-
+double lame()
+    //@ requires true;
+    //@ ensures false;
+{
+    return 1.0;
+}
 struct interval *double_mult(struct interval *first, struct interval *second)
     /*@ requires pos_interval_pred(first,?x1) &*&
     	pos_interval_pred(second,?x2);@*/
@@ -622,12 +608,7 @@ struct interval *double_mult(struct interval *first, struct interval *second)
 }
 
 
-double lame()
-    //@ requires true;
-    //@ ensures false;
-{
-    return 1.0;
-}
+
 
 /*
 struct interval *double_div(struct interval *first, struct interval *second)

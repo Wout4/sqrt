@@ -23,7 +23,7 @@ lemma void real_div_lemma2(real x, real y, real result);
     ensures real_div(x,y) == result;
 
 lemma void division_lemma(real num, real small, real big);
-    requires small <= big &*& num >=0 &*& small > 0 &*& big > 0;
+    requires small <= big &*& num >=0 &*& small > 0;
     ensures real_div(num,small) >= real_div(num,big);
     
 lemma void real_div_sum_lemma(real a, real b, real c);
@@ -78,7 +78,7 @@ lemma void sqrt_pos_lemma(real x);
     ensures real_sqrt(x) > 0;
     
 lemma void sqrt_congruence_lemma(real x, real y);
-    requires x <= y &*& x>=0 &*& y>=0;
+    requires x <= y &*& x>=0;
     ensures real_sqrt(x) <= real_sqrt(y);
     
 lemma void strict_sqrt_congruence_lemma(real x, real y);

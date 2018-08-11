@@ -183,7 +183,15 @@ lemma void pos_inf_mul_lemma(double a, double b, real ra, real rb)
     ensures ra * rb > max_dbl;
 {}
     
+lemma void cancellation_lemma(real a, real b, real c)
+    requires a > 0 &*& a * b < a * c;
+    ensures b < c;
+{}
 
+lemma void cancellation_lemma2(real a, real b, real c)
+    requires a > 0 &*& b < c;
+    ensures a * b < a * c;
+{}
     
 lemma void eq_preservation_lemma(real x, real y ,real z);
     requires x == y;
@@ -211,9 +219,13 @@ lemma void real_div_lemma2(real x, real y, real result);
     ensures real_div(x,y) == result;
 
 lemma void division_lemma(real num, real small, real big);
-    requires small <= big &*& num >=0 &*& small > 0 &*& big > 0;
+    requires small <= big &*& num >=0 &*& small > 0;
     ensures real_div(num,small) >= real_div(num,big);
     
+lemma void division_lemma2(real denum, real small, real big);
+    requires small <= big &*& denum > 0 &*& small >= 0;
+    ensures real_div(small,denum) <= real_div(big,denum);    
+
 lemma void real_div_sum_lemma(real a, real b, real c);
     requires c != 0;
     ensures real_div(a + b, c) == real_div(a,c) + real_div(b,c);
@@ -270,7 +282,7 @@ lemma void real_sqrt_lemma2(real x, real sqrt);
     ensures sqrt * sqrt == x;
     
 lemma void sqrt_congruence_lemma(real x, real y);
-    requires x <= y &*& x>=0 &*& y>=0;
+    requires x <= y &*& x>=0;
     ensures real_sqrt(x) <= real_sqrt(y);
     
 lemma void sqrt_congruence_lemma2(real x, real y);
